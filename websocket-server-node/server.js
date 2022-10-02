@@ -1,11 +1,7 @@
 const WebSocket = require('ws');
 const webServer = new WebSocket.Server({port:9000});
 var countMes=0;
-//wsServer.on('connection', onConnect);
-var countUser=0;
-
-//Вам нужно будет сделать свою собственную оболочку:
-
+var countUser=0;// счетчик пользователей
 const sockets = {};
 var user = {
     id:null,
@@ -14,6 +10,7 @@ var user = {
 
 }
 var userArr = [];
+// функция отправки сообщения конкретному сокету
 function to(user, data) {
 
     if(sockets[user] && sockets[user].readyState === WebSocket.OPEN)
@@ -22,7 +19,8 @@ function to(user, data) {
 
 webServer.on('connection', (ws) => {
 
-    const userId = countUser;//getUserIdSomehow(ws);
+    const userId = countUser;
+    // регистрируем сокет и пользователя
     var   userOne=JSON.parse(JSON.stringify(user));;
     userOne.id = userId;
     userArr.push(userOne);
@@ -32,97 +30,53 @@ webServer.on('connection', (ws) => {
 
     ws.on('message', function incoming(message) {
         // Or get user in here
-        var jsonMessage = JSON.parse(message);
-        if (jsonMessage.action=='LOGIN')
+        var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
+        if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
 
             console.log(userArr);
-            var userArrLogin = [];
+            sendUser();
+     
+        }
+        else if(jsonMessage.action=='MESSAGE')// пришло сообшение
+        {
             for (let i = 0; i < userArr.length;i++)
             {
-                if (userArr[i].id!=userId)    userArrLogin.push(userArr[i].login);
-            }
-            for (let i = 0; i < userArr.length;i++)
-            {
-                if (userArr[i] && userArr[i].raceMess==true)
+                if (userArr[i] && userArr[i].login==jsonMessage.host)
                 {
-                    to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                    to(userArr[i].id,JSON.stringify({action:'TEXT',text:jsonMessage.data}))
                 }
             }
-            //for (let i = 0; i < userArr.length;i++)
-            //{
-            //    for (let j = 0; j < userArr.length;j++)
-            //    {
-            //        if (userArr[i] && userArr[j] && userArr[i].raceMess==true && userArr[i].id != userArr[j].id )
-            //            to(userArr[i].id,JSON.stringify({action:'USER',text:userArr[j].login}));
-            //    }
-            
-            //}
-
         }
         console.log(jsonMessage.data);
     });
-
+    // при разврыве соединения
     ws.on('close', function incoming(message) {
         console.log('disconnect');
         console.log(message);
         delete userArr[userId];
         delete sockets[userId];
+        sendUser();
         console.log(userArr);
     });
 
 });
-setInterval(function () {
+function sendUser() // функция отправки списка пользователей
+{
+    var userArrLogin = [];
+          
+    for (let i = 0; i < userArr.length;i++)
+    {
+        if (userArr[i])    userArrLogin.push(userArr[i].login);
+    }
+            
     for (let i = 0; i < userArr.length;i++)
     {
         if (userArr[i] && userArr[i].raceMess==true)
-            to(userArr[i].id,JSON.stringify({action:'TEXT',text:userArr[i].id+'я клиент номер: '+i+' login: '+userArr[i].login}));
-            
+        {
+            to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+        }
     }
-}, 1000);
-
-//function onConnect(wsClient) {
-//    console.log('Новый пользователь');
-//    countUser++;
-//    // отправка приветственного сообщения клиенту
-//    wsClient.send('Привет hai user: '+countUser);
-//    wsClient.on('message', function(message) {
-//        /* обработчик сообщений от клиента */
-//        try {
-//            // сообщение пришло текстом, нужно конвертировать в JSON-формат
-//            const jsonMessage = JSON.parse(message);
-//            switch (jsonMessage.action) {
-//              case 'ECHO':
-//                wsClient.send(jsonMessage.data);
-//                break;
-//              case 'PING':
-//                setTimeout(function() {
-//                  wsClient.send('PONG');
-//                //  console.log(JSON.stringify(wsClient));
-//                }, 2000);
-//                break;
-//              case 'TEXT':
-//                console.log(jsonMessage.data);
-//                //console.log (123);
-//                break;
-//              default:
-//                console.log('Неизвестная команда');
-//                break;
-//            }
-//          } catch (error) {
-//            console.log('Ошибка', error);
-//          } 
-//      setInterval(function(){
-//          wsClient.send('Hello World '+countMes+' User '+countUser);
-//          countMes++;
-//          console.log('сообщение отпвралено');
-//      },1000);
-//    });
- 
-//    wsClient.on('close', function() {
-//        // отправка уведомления в консоль
-//        console.log('Пользователь отключился');
-//    });
- // }
+}
