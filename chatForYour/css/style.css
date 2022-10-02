@@ -1,0 +1,75 @@
+#divUserList{
+    float:left;
+    width:100px;
+    height:500px;
+    margin-right:10px;
+}
+.divUser{
+    background-color:rgb(182, 255, 0);
+    width:100px;
+    height:35px;
+    text-align:center;
+    border-radius:5px;
+    
+}
+.divUser:hover {
+    background-color:red;
+}
+.divUser p {
+    padding-top:7px;
+}
+#divChat{
+    display:none;
+}
+#message-box{
+    width:250px;
+    height:400px;
+    background-color: aqua;
+    margin-left: 30px; 
+    overflow:scroll;
+    display: block;
+    
+}
+div.message-one{
+    margin: 5px;
+    padding: 3px;
+    min-width: 120px;
+    border-radius: 5px;
+    text-align: center;
+   
+}
+#message-box .accepted{
+    display: inline-block;
+    max-width:190px;
+    height:auto;
+    background-color: blueviolet;
+    left:20px;
+    float: right;
+   
+}
+#message-box .sent{
+    display: inline-block;
+    max-width:190px;
+    height:auto;
+    background-color: brown;
+    float: left;    
+}
+#sentMessage {
+    display: inline-block;
+    position:relative;
+    max-width: 250px;
+    height: 100px;
+}
+textarea{
+    margin-left: 0px;
+}
+button{
+    display: inline;
+
+}
+form {
+    margin-left:30px;
+}
+form p{
+    margin-bottom:2px;
+}
