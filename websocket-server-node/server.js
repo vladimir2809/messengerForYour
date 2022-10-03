@@ -1,8 +1,15 @@
 const WebSocket = require('ws');
 const webServer = new WebSocket.Server({port:9000});
+var mongoose = require('mongoose');
+var db = mongoose.connect('mongodb://localhost/messanger');
+var usersSchema = require('./schemesForMessanger.js').usersSchema;
+var usersDB = mongoose.model('Users',usersSchema);
+//var messageSchema = require('./schemaForMessanger.js').messageSchema;
+//var messageDB = mongoose.model('Messanges',messageSchema);
 var countMes=0;
 var countUser=0;// счетчик пользователей
 const sockets = {};
+
 var user = {
     id:null,
     login:'',
@@ -16,7 +23,9 @@ function to(user, data) {
     if(sockets[user] && sockets[user].readyState === WebSocket.OPEN)
         sockets[user].send(data);
 }
-
+mongoose.connection.on('open', function () {
+    console.log('mongoose open');
+});
 webServer.on('connection', (ws) => {
 
     const userId = countUser;
@@ -37,11 +46,19 @@ webServer.on('connection', (ws) => {
             userArr[userArr.length - 1].raceMess = true;
 
             console.log(userArr);
+            //var newUser = new usersDB({
+            //    login: jsonMessage.data,
+            //    id:userId,
+            //});
+            //console.log('Is Document new?' + newUser.isNew+ newUser);
+            //newUser.save(function (err, doc) {
+            //    console.log("\nSaved document: " + doc + '\n' + err);
+            //}); 
             sendUser();
-     
         }
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
         {
+
             for (let i = 0; i < userArr.length;i++)
             {
                 if (userArr[i] && userArr[i].login==jsonMessage.host)
@@ -67,16 +84,27 @@ function sendUser() // функция отправки списка пользо
 {
     var userArrLogin = [];
           
-    for (let i = 0; i < userArr.length;i++)
-    {
-        if (userArr[i])    userArrLogin.push(userArr[i].login);
-    }
-            
-    for (let i = 0; i < userArr.length;i++)
-    {
-        if (userArr[i] && userArr[i].raceMess==true)
+    //for (let i = 0; i < userArr.length;i++)
+    //{
+    //    if (userArr[i])    userArrLogin.push(userArr[i].login);
+    //}
+    var query = usersDB.find();
+    query.select('login');
+  //  console.log(query);
+    query.exec(function (err, users) {
+        console.log('USER LIST: ');
+        console.log('ERR: '+err);
+        for (let i = 0; i < users.length;i++)
         {
-            to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+           console.log(users[i].login)
+           userArrLogin.push(users[i].login);
         }
-    }
+        for (let i = 0; i < userArr.length;i++)
+        {
+            if (userArr[i] && userArr[i].raceMess==true)
+            {
+                to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+            }
+        }
+    });
 }
