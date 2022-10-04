@@ -13,28 +13,73 @@ and open the template in the editor.
     <script src="js/script.js"></script>
 </head>
 <body>
+    <h1>Свободный мессенджер</h1>
     <div id="divRegistration">
+        <h3>Регистрация</h3>
         <form action="" name="formRegistration">
+            <p>Логин</p>
+            <input id="loginReg" type="text" name="login">
+            <br>
+            <p>Имя</p>
+            <input id="nameReg" type="text" name="name">
+            <br>
+            <p>Фамилия</p>
+            <input id="surnameReg" type="text" name="surname">
+            <br>
+            <p>Пароль</p>
+            <input id="passwordReg" type="password" name="password">
+            <br>
+            <p>Повтор пароля</p>
+            <input id="password2Reg" type="password" name="password2">
+            <br>
+            <!--<input id="submitReg" type="submit" name="submitUser" value="Зарегистрироваться">
+            <br>-->
+
+
+        </form>
+        <div id="labelReg">
+            <p id="labelRegP"></p>
+        </div>
+        <button id="submitReg">Зарегистрироваться</button>
+
+    </div>
+    <div id="divAutorization">
+        <h3>Вход в мессенджер</h3>
+        <form action="" name="formAutorization">
             <p>Логин</p>
             <input id="login" type="text" name="login">
             <br>
-            <!--<input type="text" name="password">
-                <input id="submit" type="submit" name="submitUser">
+            <p>пароль</p>
+            <input type="password" name="password">
+            <!--<input id="submit" type="submit" name="submitUser">
         <br>-->
 
 
         </form>
+        <button id="submit">Войти</button>
+        <button id="submitBeginReg">Регистрация</button>
 
-        <button id="submit">войти</button>
     </div>
-    <div>
+    <div id="divMain">
         <div id="divUserList">
-            <!--<div class="divUser">
+            <div class="divUser">
                 <p> Вовчик</p>
-            </div>-->
+            </div>
+            <div class="divUser">
+                <p> Вовчик</p>
+            </div>
         </div>
         <div id="divChat">
+         
             <div id="message-box">
+                <div id="divNames">
+                    <div id="divImName">
+                        <p>kosten.vova@gmail.com</p>
+                    </div>
+                    <div id="divRaceName">
+                        <p>Елена</p>
+                    </div>
+                </div>
                 <div class="message-one sent">
                     <p> Привет я Вовчик</p>
                 </div>
@@ -49,7 +94,7 @@ and open the template in the editor.
                 <p> </p>
             </div>
             <div id="sentMessage">
-                <textarea rows="4" cols="30" name="textMessage" id="textarea"></textarea>
+                <textarea rows="2" cols="64" name="textMessage" id="textarea"></textarea>
                 <button id="button">отправить</button>
             </div>
         </div>
@@ -58,7 +103,7 @@ and open the template in the editor.
 </html>
 <!-- Yandex Games SDK -->
 
-<script src="https://yandex.ru/games/sdk/v2"></script>
+<!--<script src="https://yandex.ru/games/sdk/v2"></script>-->
 
 <!--<script>
 

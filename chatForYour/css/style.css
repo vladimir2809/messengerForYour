@@ -1,15 +1,66 @@
+#divRegistration {
+    display: none;
+    width: 250px;
+    height: 420px;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    margin: -125px 0 0 -125px;
+    border: 1px solid blue;
+    border-radius: 10px;
+}
+#submitReg {
+    position:relative;
+    top:10px;
+    left:20px;
+}
+#divAutorization {
+    width: 250px;
+    height: 250px;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    margin: -125px 0 0 -125px;
+    border: 1px solid blue;
+    border-radius:10px;
+}
+#labelReg {
+    width: 350px;
+    height: 35px;
+    overflow:hidden;
+}
+#labelReg p{
+    margin-left:30px;
+    color:red;
+}
+h3{
+    margin-left:28px;
+}
+#divMain {
+    display:none;
+    width: 702px;
+    height: 700px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 1px solid red;
+    margin: -355px 0 0 -350px;
+}
 #divUserList{
     float:left;
-    width:100px;
-    height:500px;
+    width:200px;
+    height:700px;
     margin-right:10px;
 }
 .divUser{
     background-color:rgb(182, 255, 0);
-    width:100px;
+    width:200px;
     height:35px;
     text-align:center;
-    border-radius:5px;
+    border-radius:15px;
+
+    margin-left:5px;
+    margin-right:5px;
     
 }
 .divUser:hover {
@@ -19,16 +70,43 @@
     padding-top:7px;
 }
 #divChat{
-    display:none;
+
 }
-#message-box{
-    width:250px;
-    height:400px;
-    background-color: aqua;
-    margin-left: 30px; 
-    overflow:scroll;
+#divNames {
     display: block;
-    
+    width: 480px;
+    height: 35px
+}
+#divNames p{
+    position:relative;
+    top:3px;
+    margin:0px;
+}
+#divImName,#divRaceName{
+    display:inline-block;
+    width:220px;
+    height:25px;
+    background-color:aquamarine;
+    margin-top:5px;
+    text-align:center;
+
+}
+#divImName {
+    float: left;
+    margin-left: 5px;
+}
+#divRaceName {
+    float: right;
+    margin-right: 5px;
+}
+#message-box {
+    width: 490px;
+    height: 550px;
+    background-color: bisque;
+    margin-left: 30px;
+    overflow: scroll;
+    overflow-x: hidden;
+    display: block;
 }
 div.message-one{
     margin: 5px;
@@ -38,21 +116,24 @@ div.message-one{
     text-align: center;
    
 }
-#message-box .accepted{
+#message-box .accepted {
     display: inline-block;
-    max-width:190px;
-    height:auto;
+    max-width: 190px;
+    height: auto;
     background-color: blueviolet;
-    left:20px;
+    left: 20px;
+    margin-left: 30%;
+    word-wrap: break-word;
     float: right;
-   
 }
-#message-box .sent{
+#message-box .sent {
     display: inline-block;
-    max-width:190px;
-    height:auto;
+    max-width: 190px;
+    height: auto;
     background-color: brown;
-    float: left;    
+    margin-right: 30%;
+    word-wrap: break-word;
+    float: left;
 }
 #sentMessage {
     display: inline-block;
@@ -62,10 +143,20 @@ div.message-one{
 }
 textarea{
     margin-left: 0px;
+    resize:none;
 }
-button{
+button {
     display: inline;
-
+    margin-left: 30px;
+    margin-top: 15px;
+}
+#button {
+    display: inline;
+    margin-left: 0px;
+    margin-top: 15px;
+}
+#submitBeginReg {
+    margin-left: 28px;
 }
 form {
     margin-left:30px;
