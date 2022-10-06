@@ -1,0 +1,168 @@
+#divRegistration {
+    display: none;
+    width: 250px;
+    height: 420px;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    margin: -125px 0 0 -125px;
+    border: 1px solid blue;
+    border-radius: 10px;
+}
+#submitReg {
+    position:relative;
+    top:10px;
+    left:20px;
+}
+#divAutorization {
+    width: 250px;
+    height: 250px;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    margin: -125px 0 0 -125px;
+    border: 1px solid blue;
+    border-radius:10px;
+}
+#labelReg {
+    width: 350px;
+    height: 35px;
+    overflow:hidden;
+}
+#labelReg p{
+    margin-left:30px;
+    color:red;
+}
+h3{
+    margin-left:28px;
+}
+#divMain {
+    display:none;
+    width: 742px;
+    height: 700px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 1px solid red;
+    margin: -355px 0 0 -350px;
+}
+#divUserList {
+    float: left;
+    width: 250px;
+    height: 700px;
+    margin-right: 0px;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+.divUser{
+    background-color:rgb(182, 255, 0);
+    width:230px;
+    height:35px;
+    text-align:center;
+    border-radius:15px;
+
+    margin-left:5px;
+    margin-right:5px;
+    
+}
+.divUser:hover {
+    background-color:red;
+}
+.divUser p {
+    padding-top:7px;
+}
+#divChat{
+
+}
+#divNames {
+    display: block;
+    width: 480px;
+    height: 35px
+}
+#divNames p{
+    position:relative;
+    top:3px;
+    margin:0px;
+}
+#divImName,#divRaceName{
+    display:inline-block;
+    width:220px;
+    height:25px;
+    background-color:aquamarine;
+    margin-top:5px;
+    text-align:center;
+
+}
+#divImName {
+    float: left;
+    margin-left: 5px;
+}
+#divRaceName {
+    float: right;
+    margin-right: 5px;
+}
+#message-box {
+    width: 490px;
+    height: 550px;
+    background-color: bisque;
+    margin-left: 30px;
+    overflow: scroll;
+    overflow-x: hidden;
+    display: block;
+}
+div.message-one{
+    margin: 5px;
+    padding: 3px;
+    min-width: 120px;
+    border-radius: 5px;
+    text-align: center;
+   
+}
+#message-box .accepted {
+    display: inline-block;
+    max-width: 190px;
+    height: auto;
+    background-color: blueviolet;
+    left: 20px;
+    margin-left: 30%;
+    word-wrap: break-word;
+    float: right;
+}
+#message-box .sent {
+    display: inline-block;
+    max-width: 190px;
+    height: auto;
+    background-color: brown;
+    margin-right: 30%;
+    word-wrap: break-word;
+    float: left;
+}
+#sentMessage {
+    display: inline-block;
+    position:relative;
+    max-width: 250px;
+    height: 100px;
+}
+textarea{
+    margin-left: 0px;
+    resize:none;
+}
+button {
+    display: inline;
+    margin-left: 30px;
+    margin-top: 15px;
+}
+#button {
+    display: inline;
+    margin-left: 0px;
+    margin-top: 15px;
+}
+#submitBeginReg {
+    margin-left: 28px;
+}
+form {
+    margin-left:30px;
+}
+form p{
+    margin-bottom:2px;
+}

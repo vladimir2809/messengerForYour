@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+<head>
+    <title>chat for Your</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.js"></script>
+</head>
+<body>
+    <h1>Свободный мессенджер</h1>
+    <div id="divRegistration">
+        <h3>Регистрация</h3>
+        <form action="" name="formRegistration">
+            <p>Логин</p>
+            <input id="loginReg" type="text" name="login">
+            <br>
+            <p>Имя</p>
+            <input id="nameReg" type="text" name="name">
+            <br>
+            <p>Фамилия</p>
+            <input id="surnameReg" type="text" name="surname">
+            <br>
+            <p>Пароль</p>
+            <input id="passwordReg" type="password" name="password">
+            <br>
+            <p>Повтор пароля</p>
+            <input id="password2Reg" type="password" name="password2">
+            <br>
+            <!--<input id="submitReg" type="submit" name="submitUser" value="Зарегистрироваться">
+            <br>-->
+
+
+        </form>
+        <div id="labelReg">
+            <p id="labelRegP"></p>
+        </div>
+        <button id="submitReg">Зарегистрироваться</button>
+
+    </div>
+    <div id="divAutorization">
+        <h3>Вход в мессенджер</h3>
+        <form action="" name="formAutorization">
+            <p>Логин</p>
+            <input id="login" type="text" name="login">
+            <br>
+            <p>пароль</p>
+            <input type="password" name="password">
+            <!--<input id="submit" type="submit" name="submitUser">
+        <br>-->
+
+
+        </form>
+        <button id="submit">Войти</button>
+        <button id="submitBeginReg">Регистрация</button>
+
+    </div>
+    <div id="divMain">
+        <div id="divUserList">
+            <div class="divUser">
+                <p> Вовчик</p>
+            </div>
+            <div class="divUser">
+                <p> Вовчик</p>
+            </div>
+        </div>
+        <div id="divChat">
+         
+            <div id="message-box">
+                <div id="divNames">
+                    <div id="divImName">
+                        <p>kosten.vova@gmail.com</p>
+                    </div>
+                    <div id="divRaceName">
+                        <p>Елена</p>
+                    </div>
+                </div>
+                <div class="message-one sent">
+                    <p> Привет я Вовчик</p>
+                </div>
+
+                <div class="message-one accepted">
+                    <p> Здорового Вовчик</p>
+                </div>
+
+
+            </div>
+            <div id="divHost">
+                <p> </p>
+            </div>
+            <div id="sentMessage">
+                <textarea rows="2" cols="64" name="textMessage" id="textarea"></textarea>
+                <button id="button">отправить</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<!-- Yandex Games SDK -->
+
+<!--<script src="https://yandex.ru/games/sdk/v2"></script>-->
+
+<!--<script>
+
+    YaGames.init({
+
+        adv: {
+
+            onAdvClose: wasShown => {
+
+                console.info('adv closed!');
+
+            }
+        }
+
+    })
+
+        .then(ysdk => {
+
+            ysdk.adv.showFullscreenAdv();
+
+            window.ysdk = ysdk;
+
+        });
+    function ShowAd() {
+
+        window.ysdk.adv.showFullscreenAdv();
+    }
+
+    function ShowAdRewardedVideo() {
+
+        window.ysdk.adv.showRewardedVideo({
+
+            callbacks: {
+
+                onOpen: () => {
+
+                    console.log('Video ad open.');
+
+                },
+
+                onRewarded: () => {
+
+                    console.log('Тут добавляем вознограждение!');
+
+                },
+
+                onClose: () => {
+
+                    console.log('Video ad closed.');
+
+                },
+
+                onError: (e) => {
+
+                    console.log('Error while open video ad:', e);
+
+                }
+
+            }
+        })
+
+    }
+
+</script>-->
