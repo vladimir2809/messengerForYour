@@ -40,20 +40,30 @@ webServer.on('connection', (ws) => {
     ws.on('message', function incoming(message) {
         // Or get user in here
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
+        if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
+        {
+            var query = usersDB.find();
+            query.where('login',jsonMessage.login);
+            //  console.log(query);
+            query.exec(function (err, users) {
+                if (users.length > 0) {
+                    to(userId, JSON.stringify({ action: 'BEUSERNAME' }))
+                }
+            });
+        }
         if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
 
             console.log(userArr);
-            //var newUser = new usersDB({
-            //    login: jsonMessage.data,
-            //    id:userId,
-            //});
-            //console.log('Is Document new?' + newUser.isNew+ newUser);
-            //newUser.save(function (err, doc) {
-            //    console.log("\nSaved document: " + doc + '\n' + err);
-            //}); 
+            var newUser = new usersDB({
+                login: jsonMessage.data,
+            });
+            console.log('Is Document new?' + newUser.isNew+ newUser);
+            newUser.save(function (err, doc) {
+                console.log("\nSaved document: " + doc + '\n' + err);
+            }); 
             sendUser();
         }
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
