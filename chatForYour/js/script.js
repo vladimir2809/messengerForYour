@@ -82,6 +82,13 @@ window.onload = function () {
 
         
     }
+    var buttonSearch = document.getElementById('buttonSearch');
+    buttonSearch.onclick=function () {
+        var textSearch=document.getElementById('textAreaSearch').value;
+      //wsSendSearch
+        wsSendSearch(textSearch);
+    //    alert(textSearch);
+    };
     // обработчик проинформирует в консоль когда соединение установится
     myWs.onopen = function () {
         console.log('подключился');
@@ -96,14 +103,16 @@ window.onload = function () {
             case 'USER':// пришел список пользователей
                 {
                     var element = document.getElementById("divUserList");
-                    while (element.firstChild) {
+                    while (element.firstChild) 
+                    {
                         element.removeChild(element.firstChild);
                     }
                     userListName = [];
 
-                    for (let i = 0; i < jsonMessage.loginArr.length; i++) {
+                    for (let i = 0; i < jsonMessage.loginArr.length; i++) 
+                    {
                         addUser(jsonMessage.loginArr[i]);
-
+                        //alert(1);
                     }
                    
                 }
@@ -116,12 +125,13 @@ window.onload = function () {
                 break;// пришло сообшение о том что этот пользователь есть в системе
              case 'NEWUSEROK': 
                 {
-                    wsSendLogin(jsonMessage.login);
+                    //wsSendLogin(jsonMessage.login);
                     inSystemMessanger(jsonMessage.login);
                 }
                 break;
             
         }
+        console.log(jsonMessage);
     };
 
 }
@@ -140,6 +150,9 @@ function wsSendLogin(value) {
 }
 function wsSendRegistration(login) {
     myWs.send(JSON.stringify({action: 'REGISTRATION', login: login.toString()}));
+}
+function wsSendSearch(str) {
+    myWs.send(JSON.stringify({action: 'SEARCH', str: str.toString()}));
 }
 // функция для отправки команды ping на сервер
 function wsSendPing() {
