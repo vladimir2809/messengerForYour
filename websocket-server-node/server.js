@@ -42,6 +42,8 @@ webServer.on('connection', (ws) => {
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
         if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
         {
+            userArr[userArr.length - 1].login = jsonMessage.login;
+            userArr[userArr.length - 1].raceMess = true;
             var query = usersDB.count();
             query.where('login',jsonMessage.login);
             //  console.log(query);
@@ -84,6 +86,10 @@ webServer.on('connection', (ws) => {
                     to(userArr[i].id,JSON.stringify({action:'TEXT',text:jsonMessage.data}))
                 }
             }
+        }                          //SEARCH
+        else if(jsonMessage.action=='SEARCH')
+        {
+            sendUser();
         }
         console.log(jsonMessage.data);
     });
@@ -98,7 +104,7 @@ webServer.on('connection', (ws) => {
     });
 
 });
-function sendUser() // функция отправки списка пользователей
+function sendUser(str='') // функция отправки списка пользователей
 {
     var userArrLogin = [];
           
@@ -122,6 +128,7 @@ function sendUser() // функция отправки списка пользо
             if (userArr[i] && userArr[i].raceMess==true)
             {
                 to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                console.log('i='+i);
             }
         }
     });
