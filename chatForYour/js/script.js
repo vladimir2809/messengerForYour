@@ -1,8 +1,9 @@
 const myWs = new WebSocket('ws://localhost:9000');
 var userListName = [];// масси вимен пользователей
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
+ var labelReg=null;
 window.onload = function () {
-
+    labelReg=document.getElementById('labelRegP');
     // отправлеям сообшение
     updateChat('dct good',1);
     var button = document.getElementById('button');
@@ -42,43 +43,42 @@ window.onload = function () {
         var surname = document.getElementById('surnameReg').value;
         var password = document.getElementById('passwordReg').value;
         var password2=document.getElementById('password2Reg').value;
-        var labelReg=document.getElementById('labelRegP');
         if  (login=='')
         {
             labelReg.innerHTML = "Введите логин";
         }
-        else  if  (name=='')
-        {
-            labelReg.innerHTML = "Введите имя";
-        }
-        else  if  (surname=='')
-        {
-            labelReg.innerHTML = "Введите Фамилию";
-        }
-        else  if  (password=='')
-        {
-            labelReg.innerHTML = "Введите пароль";
-        }
-        else if (password!=password2)
-        {
+        //else  if  (name=='')
+        //{
+        //    labelReg.innerHTML = "Введите имя";
+        //}
+        //else  if  (surname=='')
+        //{
+        //    labelReg.innerHTML = "Введите Фамилию";
+        //}
+        //else  if  (password=='')
+        //{
+        //    labelReg.innerHTML = "Введите пароль";
+        //}
+        //else if (password!=password2)
+        //{
             
-            labelReg.innerHTML = "Пароли не совпадают.";
-        } 
+        //    labelReg.innerHTML = "Пароли не совпадают.";
+        //} 
         else
         {
-            alert('регистрация');
+            wsSendRegistration(login); 
+            //alert('регистрация');
         }
-        console.log(password);
+       // console.log(password);
     }
     // вход в систему
     var buttonLogin = document.getElementById('submit');
     buttonLogin.onclick = function () {
-        var divMain=document.getElementById('divMain');
-        divMain.style.display = 'block';
-        var divAutch=document.getElementById('divAutorization');
-        divAutch.style.display = 'none';
         var login=document.getElementById('login').value;
+        inSystemMessanger(login);
+    
         wsSendLogin(login);
+       
 
         
     }
@@ -107,7 +107,20 @@ window.onload = function () {
                     }
                    
                 }
-            break;
+                break;
+            case 'BEUSERNAME': 
+                {
+                    labelReg.innerHTML = 'Уже есть такой логин'; 
+                    alert ('REG')
+                }
+                break;// пришло сообшение о том что этот пользователь есть в системе
+             case 'NEWUSEROK': 
+                {
+                    wsSendLogin(jsonMessage.login);
+                    inSystemMessanger(jsonMessage.login);
+                }
+                break;
+            
         }
     };
 
@@ -125,6 +138,9 @@ function wsSendMessage(sender,host,value) {
 function wsSendLogin(value) {
     myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString()}));
 }
+function wsSendRegistration(login) {
+    myWs.send(JSON.stringify({action: 'REGISTRATION', login: login.toString()}));
+}
 // функция для отправки команды ping на сервер
 function wsSendPing() {
     myWs.send(JSON.stringify({action: 'PING'}));
@@ -141,7 +157,7 @@ setInterval(function () {
             {
                 elem.style.backgroundColor = 'rgb(0,255,0)';
             }
-        
+            
        
     });
   //  console.log(document.querySelector(':focus').tagName);
@@ -184,6 +200,8 @@ function addUser(text)// добавить пользователя
     document.querySelectorAll('.divUser').forEach(function (elem){
         elem.addEventListener('click', function () { 
             selectHost = elem.id;
+            var divRaceName = document.querySelector('#divRaceName p');
+            divRaceName.innerHTML = selectHost;
             console.log('выбран пользователь '+selectHost);
         });
     });
@@ -205,4 +223,17 @@ function sendMessage()
     wsSendMessage('', selectHost, text);
    
 
+}
+function inSystemMessanger(login='')
+{
+   var divMain=document.getElementById('divMain');
+    divMain.style.display = 'block';
+    var divAutch=document.getElementById('divAutorization');
+    divAutch.style.display = 'none';
+ //   var login=document.getElementById('login').value;
+    var divImName = document.querySelector('#divImName p');
+    var divRegistration=document.getElementById('divRegistration');
+    divRegistration.style.display = 'none';
+    divImName.innerHTML = login;
+  
 }
