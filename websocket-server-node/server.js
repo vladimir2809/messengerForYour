@@ -42,14 +42,21 @@ webServer.on('connection', (ws) => {
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
         if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
         {
-            var query = usersDB.find();
+            var query = usersDB.count();
             query.where('login',jsonMessage.login);
             //  console.log(query);
-            query.exec(function (err, users) {
-                if (users.length > 0) {
+            query.exec(function (err, count){
+                if (count > 0) 
+                {
                     to(userId, JSON.stringify({ action: 'BEUSERNAME' }))
                 }
+                else
+                {
+                    saveUserBd(jsonMessage.login);
+                    to(userId, JSON.stringify({ action: 'NEWUSEROK',login:jsonMessage.login }));
+                }
             });
+            
         }
         if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
@@ -57,13 +64,14 @@ webServer.on('connection', (ws) => {
             userArr[userArr.length - 1].raceMess = true;
 
             console.log(userArr);
-            var newUser = new usersDB({
-                login: jsonMessage.data,
-            });
-            console.log('Is Document new?' + newUser.isNew+ newUser);
-            newUser.save(function (err, doc) {
-                console.log("\nSaved document: " + doc + '\n' + err);
-            }); 
+            //saveUserBd(jsonMessage.data);
+            //var newUser = new usersDB({
+            //    login: jsonMessage.data,
+            //});
+            //console.log('Is Document new?' + newUser.isNew+ newUser);
+            //newUser.save(function (err, doc) {
+            //    console.log("\nSaved document: " + doc + '\n' + err);
+            //}); 
             sendUser();
         }
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
@@ -116,5 +124,15 @@ function sendUser() // функция отправки списка пользо
                 to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
             }
         }
+    });
+}
+function saveUserBd (login)
+{
+    var newUser = new usersDB({
+        login: login,
+    });
+    console.log('Is Document new?' + newUser.isNew+ newUser);
+    newUser.save(function (err, doc) {
+        console.log("\nSaved document: " + doc + '\n' + err);
     });
 }

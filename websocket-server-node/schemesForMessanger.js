@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var usersSchema = new Schema ({
     login:{type: String , index:1, required:true, /*unique:true*/},
-    id:{type:Number, index:1, required:true}
+    
     //first:{type: String, index:1},
     //last:String,
     //size:Number,
@@ -14,6 +14,9 @@ var usersSchema = new Schema ({
 //wordSchema.methods.StartWith = function (letter) {
 //    return this.first === letter;
 //};
+var messagesSchema = new Schema({
+
+});
 exports.usersSchema = usersSchema;
 console.log('Required Paths: ')
 console.log(usersSchema.requiredPaths());
