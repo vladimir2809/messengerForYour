@@ -16,6 +16,10 @@ var user = {
     raceMess:false,
 
 }
+loginArr = {
+    arr:[],
+    flag: false,
+}
 var userArr = [];
 // функция отправки сообщения конкретному сокету
 function to(user, data) {
@@ -42,30 +46,52 @@ webServer.on('connection', (ws) => {
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
         if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
         {
-            var query = usersDB.find();
-            query.where('login',jsonMessage.login);
+            userArr[userArr.length - 1].login = jsonMessage.data;
+            userArr[userArr.length - 1].raceMess = true;
+            var query = usersDB.count();
+            query.where('login',jsonMessage.data);
             //  console.log(query);
-            query.exec(function (err, users) {
-                if (users.length > 0) {
+            query.exec(function (err, count){
+                if (count > 0) 
+                {
                     to(userId, JSON.stringify({ action: 'BEUSERNAME' }))
                 }
+                else
+                {
+                    saveUserBd(jsonMessage.data);
+                    to(userId, JSON.stringify({ action: 'NEWUSEROK',data:jsonMessage.data }));
+                }
             });
-        }
-        if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
+            
+        }else if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
 
             console.log(userArr);
-            var newUser = new usersDB({
-                login: jsonMessage.data,
-            });
-            console.log('Is Document new?' + newUser.isNew+ newUser);
-            newUser.save(function (err, doc) {
-                console.log("\nSaved document: " + doc + '\n' + err);
-            }); 
-            sendUser();
+            //saveUserBd(jsonMessage.data);
+            //var newUser = new usersDB({
+            //    login: jsonMessage.data,
+            //});
+            //console.log('Is Document new?' + newUser.isNew+ newUser);
+            //newUser.save(function (err, doc) {
+            //    console.log("\nSaved document: " + doc + '\n' + err);
+            //}); 
+            calcUserArr();
+            var userArrLogin = loginArr.arr;
+            console.log('USERARRLOGIN: '+userArrLogin);
+            for (let i = 0; i < userArr.length;i++)
+            {
+                if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+                {
+                    to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                    console.log('i='+i);
+                }
+            //}
+
+            }
         }
+
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
         {
 
@@ -73,9 +99,36 @@ webServer.on('connection', (ws) => {
             {
                 if (userArr[i] && userArr[i].login==jsonMessage.host)
                 {
-                    to(userArr[i].id,JSON.stringify({action:'TEXT',text:jsonMessage.data}))
+                    to(userArr[i].id,JSON.stringify({action:'TEXT',data:jsonMessage.data}))
                 }
             }
+        }                          //SEARCH
+        else if(jsonMessage.action=='SEARCH')
+        {
+            calcUserArr();
+            var interval=setInterval(function () {
+                if (loginArr.flag==true)
+                {
+                    var text = jsonMessage.data;
+                    var resultArr = [];
+                    for (let i = 0; i < loginArr.arr.length;i++)
+                    {
+                        if (loginArr.arr[i].indexOf(text) != -1)
+                        {
+                            resultArr.push(loginArr.arr[i]);
+                        }
+                    }
+                    for (let i = 0; i < userArr.length;i++)
+                    {
+                        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+                        {
+                            to(userArr[i].id, JSON.stringify({ action: 'SEARCHRESULT', loginArr: resultArr }));
+                        }
+                        
+                    }
+                    clearInterval(interval);
+                }
+            });
         }
         console.log(jsonMessage.data);
     });
@@ -85,15 +138,15 @@ webServer.on('connection', (ws) => {
         console.log(message);
         delete userArr[userId];
         delete sockets[userId];
-        sendUser();
+        //calcUserArr();
         console.log(userArr);
     });
 
 });
-function sendUser() // функция отправки списка пользователей
+function calcUserArr(str='') // функция расчитать список пользователей
 {
-    var userArrLogin = [];
-          
+    let userArrLogin = [];
+    loginArr.flag = false;
     //for (let i = 0; i < userArr.length;i++)
     //{
     //    if (userArr[i])    userArrLogin.push(userArr[i].login);
@@ -109,12 +162,33 @@ function sendUser() // функция отправки списка пользо
            console.log(users[i].login)
            userArrLogin.push(users[i].login);
         }
-        for (let i = 0; i < userArr.length;i++)
-        {
-            if (userArr[i] && userArr[i].raceMess==true)
-            {
-                to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
-            }
-        }
+        ;
+        loginArr.arr = userArrLogin;
+        loginArr.flag = true
+        //for (let i = 0; i < userArr.length;i++)
+        //{
+        //    if (userArr[i] && userArr[i].raceMess==true)
+        //    {
+        //        to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+        //        console.log('i='+i);
+        //    }
+        //}
+    }); 
+    //setTimeout(function () {
+    //    if (flag==true)
+    //    {
+
+    //    }
+    //}, 100);
+   
+}
+function saveUserBd (login)
+{
+    var newUser = new usersDB({
+        login: login,
+    });
+    console.log('Is Document new?' + newUser.isNew+ newUser);
+    newUser.save(function (err, doc) {
+        console.log("\nSaved document: " + doc + '\n' + err);
     });
 }
