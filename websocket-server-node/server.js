@@ -3,7 +3,9 @@ const webServer = new WebSocket.Server({port:9000});
 var mongoose = require('mongoose');
 var db = mongoose.connect('mongodb://localhost/messanger');
 var usersSchema = require('./schemesForMessanger.js').usersSchema;
+var messagesSchema = require('./schemesForMessanger.js').messagesSchema;
 var usersDB = mongoose.model('Users',usersSchema);
+var messagesDB = mongoose.model('messages',messagesSchema);
 //var messageSchema = require('./schemaForMessanger.js').messageSchema;
 //var messageDB = mongoose.model('Messanges',messageSchema);
 var countMes=0;
@@ -15,6 +17,10 @@ var user = {
     login:'',
     raceMess:false,
 
+}
+loginArr = {
+    arr:[],
+    flag: false,
 }
 var userArr = [];
 // функция отправки сообщения конкретному сокету
@@ -42,10 +48,10 @@ webServer.on('connection', (ws) => {
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
         if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
         {
-            userArr[userArr.length - 1].login = jsonMessage.login;
+            userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
             var query = usersDB.count();
-            query.where('login',jsonMessage.login);
+            query.where('login',jsonMessage.data);
             //  console.log(query);
             query.exec(function (err, count){
                 if (count > 0) 
@@ -54,13 +60,12 @@ webServer.on('connection', (ws) => {
                 }
                 else
                 {
-                    saveUserBd(jsonMessage.login);
-                    to(userId, JSON.stringify({ action: 'NEWUSEROK',login:jsonMessage.login }));
+                    saveUserBd(jsonMessage.data);
+                    to(userId, JSON.stringify({ action: 'NEWUSEROK',data:jsonMessage.data }));
                 }
             });
             
-        }
-        if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
+        }else if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
@@ -74,22 +79,97 @@ webServer.on('connection', (ws) => {
             //newUser.save(function (err, doc) {
             //    console.log("\nSaved document: " + doc + '\n' + err);
             //}); 
-            sendUser();
-        }
-        else if(jsonMessage.action=='MESSAGE')// пришло сообшение
-        {
-
+            calcUserArr();
+            var userArrLogin = loginArr.arr;
+            console.log('USERARRLOGIN: '+userArrLogin);
             for (let i = 0; i < userArr.length;i++)
             {
-                if (userArr[i] && userArr[i].login==jsonMessage.host)
+                if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
                 {
-                    to(userArr[i].id,JSON.stringify({action:'TEXT',text:jsonMessage.data}))
+                    to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                    console.log('i='+i);
                 }
+            //}
+
             }
-        }                          //SEARCH
+        }
+
+        else if(jsonMessage.action=='MESSAGE')// пришло сообшение
+        {
+            // запрос на поиск собшения по отправителю и получателю
+            var query = messagesDB.findOne().or([
+                {$and: [{'login1': jsonMessage.sender}, {'login2': jsonMessage.host} ]},
+                {$and: [{'login2': jsonMessage.sender}, {'login1': jsonMessage.host }]},
+            ]);
+            query.exec(function (err, doc1) {
+                if (doc1!=null) // если есть совпадения
+                {
+                    // сохраним сообшение в конкретную ветку 
+                    console.log('\n Document' + doc1);
+                    var query=doc1.updateOne({$push:{ 
+                        messageArr: { "loginSender": jsonMessage.sender,"message":jsonMessage.data }
+                    } });
+                    query.exec(function (err, res) {
+                        console.log(res);
+
+                    });
+                }
+                else// если нет совпадениий
+                {
+                    // сохраним новое сообшение в начале переписки
+                    var newMessage = new messagesDB({
+                        login1: jsonMessage.sender,
+                        login2: jsonMessage.host,
+                        messageArr: [{ loginSender: jsonMessage.sender, message: jsonMessage.data }],
+                    });
+                    console.log('NEW MESSAGE');
+                    newMessage.save(function (err, doc) {
+                        console.log("\nSaved document of message: " + doc + '\n' + err);
+                    });
+                }
+            });
+        }
+        else if(jsonMessage.action=='GETMESSAGELIST')
+        {
+             var query = messagesDB.findOne().or([
+                {$and: [{'login1': jsonMessage.sender}, {'login2': jsonMessage.host} ]},
+                {$and: [{'login2': jsonMessage.sender}, {'login1': jsonMessage.host }]},
+            ]);
+            query.exec(function (err, doc) {
+                console.log('MESSAGELIST');
+                console.log(doc);
+                if (doc!=null)
+                {
+                    to(userId,JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }))
+                }
+            });
+        }
         else if(jsonMessage.action=='SEARCH')
         {
-            sendUser();
+            calcUserArr();
+            var interval=setInterval(function () {
+                if (loginArr.flag==true)
+                {
+                    var text = jsonMessage.data;
+                    var resultArr = [];
+                    for (let i = 0; i < loginArr.arr.length;i++)
+                    {
+                        if (loginArr.arr[i].indexOf(text) != -1)
+                        {
+                            resultArr.push(loginArr.arr[i]);
+                        }
+                    }
+                    for (let i = 0; i < userArr.length;i++)
+                    {
+                        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+                        {
+                            to(userArr[i].id, JSON.stringify({ action: 'SEARCHRESULT', loginArr: resultArr }));
+                        }
+                        
+                    }
+                    clearInterval(interval);
+                }
+            });
         }
         console.log(jsonMessage.data);
     });
@@ -99,15 +179,15 @@ webServer.on('connection', (ws) => {
         console.log(message);
         delete userArr[userId];
         delete sockets[userId];
-        sendUser();
+        //calcUserArr();
         console.log(userArr);
     });
 
 });
-function sendUser(str='') // функция отправки списка пользователей
+function calcUserArr(str='') // функция расчитать список пользователей
 {
-    var userArrLogin = [];
-          
+    let userArrLogin = [];
+    loginArr.flag = false;
     //for (let i = 0; i < userArr.length;i++)
     //{
     //    if (userArr[i])    userArrLogin.push(userArr[i].login);
@@ -123,15 +203,25 @@ function sendUser(str='') // функция отправки списка пол
            console.log(users[i].login)
            userArrLogin.push(users[i].login);
         }
-        for (let i = 0; i < userArr.length;i++)
-        {
-            if (userArr[i] && userArr[i].raceMess==true)
-            {
-                to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
-                console.log('i='+i);
-            }
-        }
-    });
+        ;
+        loginArr.arr = userArrLogin;
+        loginArr.flag = true
+        //for (let i = 0; i < userArr.length;i++)
+        //{
+        //    if (userArr[i] && userArr[i].raceMess==true)
+        //    {
+        //        to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+        //        console.log('i='+i);
+        //    }
+        //}
+    }); 
+    //setTimeout(function () {
+    //    if (flag==true)
+    //    {
+
+    //    }
+    //}, 100);
+   
 }
 function saveUserBd (login)
 {
