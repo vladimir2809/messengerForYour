@@ -2,6 +2,7 @@ const myWs = new WebSocket('ws://localhost:9000');
 var userListName = [];// масси вимен пользователей
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
  var labelReg=null;
+var myLogin = null;
 window.onload = function () {
     labelReg=document.getElementById('labelRegP');
     // отправлеям сообшение
@@ -74,10 +75,10 @@ window.onload = function () {
     // вход в систему
     var buttonLogin = document.getElementById('submit');
     buttonLogin.onclick = function () {
-        var login=document.getElementById('login').value;
-        inSystemMessanger(login);
+        myLogin=document.getElementById('login').value;
+        inSystemMessanger(myLogin);
     
-        wsSendLogin(login);
+        wsSendLogin(myLogin);
        
 
         
@@ -99,21 +100,10 @@ window.onload = function () {
         var jsonMessage = JSON.parse(message.data);
         switch (jsonMessage.action)
         {
-            case 'TEXT': updateChat(jsonMessage.text, 1); break;// пришло сообшение
+            case 'TEXT': updateChat(jsonMessage.data, 1); break;// пришло сообшение
             case 'USER':// пришел список пользователей
                 {
-                    var element = document.getElementById("divUserList");
-                    while (element.firstChild) 
-                    {
-                        element.removeChild(element.firstChild);
-                    }
-                    userListName = [];
-
-                    for (let i = 0; i < jsonMessage.loginArr.length; i++) 
-                    {
-                        addUser(jsonMessage.loginArr[i]);
-                        //alert(1);
-                    }
+                    updateUserList(jsonMessage.loginArr);
                    
                 }
                 break;
@@ -126,7 +116,38 @@ window.onload = function () {
              case 'NEWUSEROK': 
                 {
                     //wsSendLogin(jsonMessage.login);
-                    inSystemMessanger(jsonMessage.login);
+                    inSystemMessanger(jsonMessage.data);
+                }
+                break;
+             case 'MESSAGELIST': 
+                {
+                    //wsSendLogin(jsonMessage.login);
+                  //  inSystemMessanger(jsonMessage.data);
+                    clearChat();
+                    for (let i = 0; i < jsonMessage.messageArr.length;i++)
+                    {
+                        console.log(jsonMessage.messageArr[i].message);
+                        console.log(jsonMessage.messageArr[i].loginSender);
+                        var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
+                        updateChat(jsonMessage.messageArr[i].message, receive);
+                    }
+                }
+               break;
+             case 'SEARCHRESULT' :
+                {
+                    updateUserList(jsonMessage.loginArr);
+                    //wsSendLogin(jsonMessage.login);
+                   // inSystemMessanger(jsonMessage.data);
+                    //var element = document.getElementById("divUserList");
+                    //while (element.firstChild) 
+                    //{
+                    //    element.removeChild(element.firstChild);
+                    //}
+                    //for (let i = 0; i < jsonMessage.data.length; i++) 
+                    //{
+                    //    addUser(jsonMessage.data[i]);
+                    //    //alert(1);
+                    //}
                 }
                 break;
             
@@ -134,6 +155,21 @@ window.onload = function () {
         console.log(jsonMessage);
     };
 
+}
+function updateUserList(listUser)
+{
+    var element = document.getElementById("divUserList");
+    while (element.firstChild) 
+    {
+        element.removeChild(element.firstChild);
+    }
+    userListName = [];
+
+    for (let i = 0; i < listUser.length; i++) 
+    {
+        addUser(listUser[i]);
+        //alert(1);
+    }
 }
 // функция для отправки echo-сообщений на сервер
 function wsSendEcho(value) {
@@ -145,14 +181,17 @@ function wsSendText(value) {
 function wsSendMessage(sender,host,value) {
     myWs.send(JSON.stringify({action: 'MESSAGE',sender:sender,host:host ,data: value.toString()}));
 }
+function wsSendMessageList(sender,host) {
+    myWs.send(JSON.stringify({action: 'GETMESSAGELIST',sender:sender,host:host }));
+}
 function wsSendLogin(value) {
     myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString()}));
 }
 function wsSendRegistration(login) {
-    myWs.send(JSON.stringify({action: 'REGISTRATION', login: login.toString()}));
+    myWs.send(JSON.stringify({action: 'REGISTRATION', data: login.toString()}));
 }
 function wsSendSearch(str) {
-    myWs.send(JSON.stringify({action: 'SEARCH', str: str.toString()}));
+    myWs.send(JSON.stringify({action: 'SEARCH', data: str.toString()}));
 }
 // функция для отправки команды ping на сервер
 function wsSendPing() {
@@ -199,6 +238,14 @@ function insertElem(elem,className='')// вставить элемент
     var divBox=document.getElementById(className);
     divBox.append(elem);
 }
+function clearChat()
+{
+    var element = document.getElementById("message-box");
+    while (element.firstChild) 
+    {
+        element.removeChild(element.firstChild);
+    }
+}
 function updateChat(text,receive)
 {
     var elem=createElem(text,receive);
@@ -211,12 +258,14 @@ function addUser(text)// добавить пользователя
     elem.id = text;
     insertElem(elem, 'divUserList');
     document.querySelectorAll('.divUser').forEach(function (elem){
-        elem.addEventListener('click', function () { 
+        //elem.addEventListener('click', function () { 
+        elem.onclick= function () { 
             selectHost = elem.id;
             var divRaceName = document.querySelector('#divRaceName p');
             divRaceName.innerHTML = selectHost;
+            wsSendMessageList(myLogin,selectHost) 
             console.log('выбран пользователь '+selectHost);
-        });
+         };
     });
 }
 function strip_tags(originalString)
@@ -233,7 +282,7 @@ function sendMessage()
     textarea.value= '';  
     updateChat(text,0);      
     wsSendText(text);
-    wsSendMessage('', selectHost, text);
+    wsSendMessage(myLogin, selectHost, text);
    
 
 }
