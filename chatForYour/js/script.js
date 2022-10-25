@@ -124,12 +124,15 @@ window.onload = function () {
                     //wsSendLogin(jsonMessage.login);
                   //  inSystemMessanger(jsonMessage.data);
                     clearChat();
-                    for (let i = 0; i < jsonMessage.messageArr.length;i++)
+                    if (jsonMessage.messageArr!=null)
                     {
-                        console.log(jsonMessage.messageArr[i].message);
-                        console.log(jsonMessage.messageArr[i].loginSender);
-                        var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
-                        updateChat(jsonMessage.messageArr[i].message, receive);
+                        for (let i = 0; i < jsonMessage.messageArr.length;i++)
+                        {
+                            console.log(jsonMessage.messageArr[i].message);
+                            console.log(jsonMessage.messageArr[i].loginSender);
+                            var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
+                            updateChat(jsonMessage.messageArr[i].message, receive);
+                        }
                     }
                 }
                break;
