@@ -23,6 +23,8 @@ loginArr = {
     flag: false,
 }
 var userArr = [];
+var contactArr = [];
+var contactFlag = false;
 // функция отправки сообщения конкретному сокету
 function to(user, data) {
 
@@ -65,7 +67,8 @@ webServer.on('connection', (ws) => {
                 }
             });
             
-        }else if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
+        }
+        else if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
@@ -79,19 +82,27 @@ webServer.on('connection', (ws) => {
             //newUser.save(function (err, doc) {
             //    console.log("\nSaved document: " + doc + '\n' + err);
             //}); 
-            calcUserArr();
-            var userArrLogin = loginArr.arr;
-            console.log('USERARRLOGIN: '+userArrLogin);
-            for (let i = 0; i < userArr.length;i++)
-            {
-                if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+           // calcUserArr();
+            getContacts(userArr[userArr.length - 1].login);
+            var interval = setInterval(function () {
+                if (contactFlag==true)
                 {
-                    to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
-                    console.log('i='+i);
-                }
-            //}
+                    //var userArrLogin = loginArr.arr;
+                    var userArrLogin = contactArr;
+                    console.log('USERARRLOGIN: '+userArrLogin);
+                    for (let i = 0; i < userArr.length;i++)
+                    {
+                        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+                        {
+                            to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                            console.log('i='+i);
+                        }
+                    //}
 
-            }
+                    }
+                    clearInterval(interval);
+                }
+            }, 100);
         }
 
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
@@ -125,7 +136,25 @@ webServer.on('connection', (ws) => {
                     console.log('NEW MESSAGE');
                     newMessage.save(function (err, doc) {
                         console.log("\nSaved document of message: " + doc + '\n' + err);
+
+                        var queryUser = usersDB.findOne().where({ login: jsonMessage.sender }); 
+                        queryUser.exec(function (err, user){
+                            var queryContact = user.updateOne({
+                                $push: {
+                                    contactArr: {
+                                        loginHost: jsonMessage.host,
+                                    }
+                                }
+                            });
+                            queryContact.exec(function (err, res) {
+                                console.log('new contact:'+jsonMessage.host +err);
+                            });
+
+                       // }};
+                        });
+
                     });
+                    
                 }
             });
         }
@@ -141,6 +170,10 @@ webServer.on('connection', (ws) => {
                 if (doc!=null)
                 {
                     to(userId,JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }))
+                }
+                else
+                {
+                     to(userId,JSON.stringify({ action: 'MESSAGELIST', messageArr: null }))
                 }
             });
         }
@@ -184,6 +217,24 @@ webServer.on('connection', (ws) => {
     });
 
 });
+function getContacts(login)
+{
+    contactFlag = false;
+    contactArr = [];
+    var query = usersDB.findOne().where({'login':login});
+    
+    query.exec(function (err, user) {
+        if (user!=null)
+        {
+            for (let i = 0; i < user.contactArr.length;i++)
+            {
+                contactArr.push(user.contactArr[i].loginHost);
+            }
+            console.log(contactArr);
+            contactFlag = true;
+        }
+    });
+}
 function calcUserArr(str='') // функция расчитать список пользователей
 {
     let userArrLogin = [];

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var usersSchema = new Schema ({
     login:{type: String , index:1, required:true, /*unique:true*/},
-    
+    contactArr:[{loginHost:String}],
     //first:{type: String, index:1},
     //last:String,
     //size:Number,
