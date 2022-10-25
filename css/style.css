@@ -38,7 +38,7 @@ h3{
 }
 #divMain {
     display:none;
-    width: 742px;
+    width: 752px;
     height: 700px;
     position: absolute;
     top: 50%;
@@ -46,10 +46,34 @@ h3{
     border: 1px solid red;
     margin: -355px 0 0 -350px;
 }
+#divLeftPanel{
+    display:inline-block;
+    max-width:250px;
+    height:700px;
+}
+#divSearch{
+    display:block;
+    width:250px;
+    margin-top:10px;
+    margin-left:5px;
+
+}
+#textAreaSearch{
+    position:relative;
+    left:10px;
+}
+#buttonSearch {
+    margin-left: 0px;
+    margin-top:-5px;
+    position: relative;
+    left: 10px;
+    top: -5px;
+}
+
 #divUserList {
     float: left;
     width: 250px;
-    height: 700px;
+    height: 663px;
     margin-right: 0px;
     overflow: scroll;
     overflow-x: hidden;
@@ -72,7 +96,8 @@ h3{
     padding-top:7px;
 }
 #divChat{
-
+    float:right;
+     width:500px;
 }
 #divNames {
     display: block;
@@ -105,7 +130,7 @@ h3{
     width: 490px;
     height: 550px;
     background-color: bisque;
-    margin-left: 30px;
+    margin-left: 0px;
     overflow: scroll;
     overflow-x: hidden;
     display: block;
