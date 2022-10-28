@@ -1,10 +1,13 @@
 const myWs = new WebSocket('ws://localhost:9000');
 var userListName = [];// масси вимен пользователей
+var numSelectHost = null;
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
  var labelReg=null;
+ var labelIn=null;
 var myLogin = null;
 window.onload = function () {
     labelReg=document.getElementById('labelRegP');
+    labelIn=document.getElementById('labelInP');
     // отправлеям сообшение
     updateChat('dct good',1);
     var button = document.getElementById('button');
@@ -76,7 +79,7 @@ window.onload = function () {
     var buttonLogin = document.getElementById('submit');
     buttonLogin.onclick = function () {
         myLogin=document.getElementById('login').value;
-        inSystemMessanger(myLogin);
+       // inSystemMessanger(myLogin);
     
         wsSendLogin(myLogin);
        
@@ -100,10 +103,47 @@ window.onload = function () {
         var jsonMessage = JSON.parse(message.data);
         switch (jsonMessage.action)
         {
-            case 'TEXT': updateChat(jsonMessage.data, 1); break;// пришло сообшение
-            case 'USER':// пришел список пользователей
+            case 'TEXT': // пришло сообшение
+                {
+                    if (jsonMessage.sender==selectHost)
+                    {
+                        updateChat(jsonMessage.data, 1);
+                    }
+                    else
+                    {
+                        document.querySelectorAll('.divUser').forEach(function (elem) {
+                            let text = elem.firstChild.innerHTML;
+                            if (text!=selectHost)
+                            {
+                                elem.firstChild.innerHTML = text+' +1';   
+                            }
+
+                        });
+                    }
+                }break;
+            case 'USERS':// пришел список пользователей
                 {
                     updateUserList(jsonMessage.loginArr);
+                   
+                }
+                break;
+             case 'YESLOGIN':// пришел список пользователей
+                {
+                    
+                
+                    inSystemMessanger(myLogin);
+                }
+                break;
+             case 'NOLOGIN':// пришел список пользователей
+                {
+                    labelIn.innerHTML= 'Нет такого логина';
+                   
+                   // inSystemMessanger(myLogin);
+                }
+                break;
+            case 'DOUBLELOGIN':// пришел список пользователей
+                {
+                   labelIn.innerHTML= 'Пользователь уже в системе';
                    
                 }
                 break;
@@ -202,19 +242,24 @@ function wsSendPing() {
 }
 // постоянный цикл 
 setInterval(function () {
-    document.querySelectorAll('.divUser').forEach(function (elem){
 
-            if ('<p>'+selectHost+'</p>' == elem.innerHTML)
-            {
-                elem.style.backgroundColor = 'rgb(255,128,0)';
-            }
-            else
-            {
-                elem.style.backgroundColor = 'rgb(0,255,0)';
-            }
+    let arr = document.querySelectorAll('.divUser');//;.forEach(function (elem){
+    console.log(arr);
+    for (let i = 0; i < arr.length;i++)
+    {
+        //if ('<p>'+selectHost+'</p>' == elem.innerHTML)
+        if (numSelectHost==i)
+        {
+            arr[i].style.backgroundColor = 'rgb(255,128,0)';
+        }
+        else
+        {
+            arr[i].style.backgroundColor = 'rgb(0,255,0)';
+        }
+    }
             
        
-    });
+   // });
   //  console.log(document.querySelector(':focus').tagName);
 
 },100);
@@ -260,16 +305,21 @@ function addUser(text)// добавить пользователя
     userListName.push(text);
     elem.id = text;
     insertElem(elem, 'divUserList');
-    document.querySelectorAll('.divUser').forEach(function (elem){
+
+  //  document.querySelectorAll('.divUser').forEach(function (elem){
         //elem.addEventListener('click', function () { 
         elem.onclick= function () { 
             selectHost = elem.id;
+            for (let i = 0; i < userListName.length;i++)
+            {
+                if (userListName[i] == selectHost) numSelectHost = i;
+            }
             var divRaceName = document.querySelector('#divRaceName p');
             divRaceName.innerHTML = selectHost;
             wsSendMessageList(myLogin,selectHost) 
             console.log('выбран пользователь '+selectHost);
          };
-    });
+  //  });
 }
 function strip_tags(originalString)
 {

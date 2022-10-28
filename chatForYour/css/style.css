@@ -33,6 +33,16 @@
     margin-left:30px;
     color:red;
 }
+#labelIn {
+    width: 350px;
+    height: 35px;
+    overflow: hidden;
+}
+
+#labelIn p {
+    margin-left: 30px;
+    color: red;
+}
 h3{
     margin-left:28px;
 }
