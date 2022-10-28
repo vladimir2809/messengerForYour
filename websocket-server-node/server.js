@@ -16,6 +16,7 @@ var user = {
     id:null,
     login:'',
     raceMess:false,
+    online:false,
 
 }
 loginArr = {
@@ -23,7 +24,11 @@ loginArr = {
     flag: false,
 }
 var userArr = [];
-var contactArr = [];
+var contact={
+    login:'',
+    countMes:0,
+}
+var contactUserArr = [];
 var contactFlag = false;
 // функция отправки сообщения конкретному сокету
 function to(user, data) {
@@ -40,40 +45,42 @@ webServer.on('connection', (ws) => {
     // регистрируем сокет и пользователя
     var   userOne=JSON.parse(JSON.stringify(user));;
     userOne.id = userId;
+    userOne.online = true;
     userArr.push(userOne);
     countUser++;
     sockets[userId] = ws;
     console.log('connect');
+    console.log(userArr);
 
     ws.on('message', function incoming(message) {
         // Or get user in here
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
-        if (jsonMessage.action=='REGISTRATION')// пользователь зарегался
+        if (jsonMessage.action == 'REGISTRATION')// пользователь зарегался
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
             var query = usersDB.count();
-            query.where('login',jsonMessage.data);
+            query.where('login', jsonMessage.data);
             //  console.log(query);
-            query.exec(function (err, count){
-                if (count > 0) 
-                {
+            query.exec(function (err, count) {
+                if (count > 0) {
                     to(userId, JSON.stringify({ action: 'BEUSERNAME' }))
                 }
-                else
-                {
+                else {
                     saveUserBd(jsonMessage.data);
-                    to(userId, JSON.stringify({ action: 'NEWUSEROK',data:jsonMessage.data }));
+                    to(userId, JSON.stringify({ action: 'NEWUSEROK', data: jsonMessage.data }));
                 }
             });
-            
+
         }
-        else if (jsonMessage.action=='LOGIN')// пользователь вошел в систему
+        else if (jsonMessage.action == 'LOGIN')// пользователь вошел в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
 
-            console.log(userArr);
+        //    console.log(userArr);
+            let login = userArr[userArr.length - 1].login;
+            let flagDoubleLogin = false;
             //saveUserBd(jsonMessage.data);
             //var newUser = new usersDB({
             //    login: jsonMessage.data,
@@ -82,19 +89,61 @@ webServer.on('connection', (ws) => {
             //newUser.save(function (err, doc) {
             //    console.log("\nSaved document: " + doc + '\n' + err);
             //}); 
-           // calcUserArr();
+            // calcUserArr();
+            for (let i = 0; i < userArr.length-1;i++)
+            {
+                var numLength = userArr.length - 1;
+                if (userArr[numLength] && userArr[i] && userArr[i].login==userArr[numLength].login 
+                    && userArr[numLength].raceMess==true)
+                {                                                  
+                    to(numLength,JSON.stringify({action:'DOUBLELOGIN',data:null}));
+                    console.log('i='+i);
+                    flagDoubleLogin = true;
+                }
+            }
+            if (flagDoubleLogin==false)
+            {
+                var queryBeLogin = usersDB.findOne().where({ login: jsonMessage.data });
+                queryBeLogin.exec(function (err, res) {
+                   // console.log(res);
+                    if (res==null)
+                    {
+                        for (let i = 0; i < userArr.length;i++)
+                        {
+                            if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
+                            {
+                                to(i,JSON.stringify({action:'NOLOGIN',data:null}));
+                                console.log('i='+i);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (let i = 0; i < userArr.length;i++)
+                        {
+                            if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
+                            {
+                                to(i,JSON.stringify({action:'YESLOGIN',data:null}));
+                                console.log('i='+i);
+                            }
+                        }
+                    }
+                });
+            }
+            
+           
             getContacts(userArr[userArr.length - 1].login);
             var interval = setInterval(function () {
                 if (contactFlag==true)
                 {
                     //var userArrLogin = loginArr.arr;
-                    var userArrLogin = contactArr;
+                    var userArrLogin = contactUserArr;
                     console.log('USERARRLOGIN: '+userArrLogin);
                     for (let i = 0; i < userArr.length;i++)
                     {
-                        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+                        if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
                         {
-                            to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
+                            to(i,JSON.stringify({action:'USERS',loginArr:userArrLogin}));
                             console.log('i='+i);
                         }
                     //}
@@ -107,6 +156,8 @@ webServer.on('connection', (ws) => {
 
         else if(jsonMessage.action=='MESSAGE')// пришло сообшение
         {
+     
+
             // запрос на поиск собшения по отправителю и получателю
             var query = messagesDB.findOne().or([
                 {$and: [{'login1': jsonMessage.sender}, {'login2': jsonMessage.host} ]},
@@ -136,13 +187,28 @@ webServer.on('connection', (ws) => {
                     console.log('NEW MESSAGE');
                     newMessage.save(function (err, doc) {
                         console.log("\nSaved document of message: " + doc + '\n' + err);
-
-                        var queryUser = usersDB.findOne().where({ login: jsonMessage.sender }); 
-                        queryUser.exec(function (err, user){
+                        // сохраним новый контакт у отправителя
+                        var queryUserSender = usersDB.findOne().where({ login: jsonMessage.sender }); 
+                        queryUserSender.exec(function (err, user){
                             var queryContact = user.updateOne({
                                 $push: {
                                     contactArr: {
                                         loginHost: jsonMessage.host,
+                                    }
+                                }
+                            });
+                            queryContact.exec(function (err, res) {
+                                console.log('new contact:'+jsonMessage.host +err);
+                            });
+
+                       // }};
+                        });
+                        var queryUserHost = usersDB.findOne().where({ login: jsonMessage.host }); 
+                        queryUserHost.exec(function (err, user){
+                            var queryContact = user.updateOne({
+                                $push: {
+                                    contactArr: {
+                                        loginHost: jsonMessage.sender,
                                     }
                                 }
                             });
@@ -157,6 +223,13 @@ webServer.on('connection', (ws) => {
                     
                 }
             });
+            for (let i = 0; i < userArr.length;i++)
+            {
+                if (userArr[i] && userArr[i].login==jsonMessage.host && userArr[i].raceMess==true)
+                {
+                    to(i,JSON.stringify({ action: 'TEXT', sender:jsonMessage.sender ,data: jsonMessage.data}))
+                }
+            }
         }
         else if(jsonMessage.action=='GETMESSAGELIST')
         {
@@ -167,13 +240,25 @@ webServer.on('connection', (ws) => {
             query.exec(function (err, doc) {
                 console.log('MESSAGELIST');
                 console.log(doc);
+                let numUserId = null;
+                for (let i = 0; i < userArr.length;i++)
+                {
+                    if (userArr[i] && userArr[i].login==jsonMessage.sender && userArr[i].raceMess==true)
+                    {
+                        numUserId = i;
+                        break;
+                    }
+
+                //}
+
+                }
                 if (doc!=null)
                 {
-                    to(userId,JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }))
+                    to(numUserId,JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }))
                 }
                 else
                 {
-                     to(userId,JSON.stringify({ action: 'MESSAGELIST', messageArr: null }))
+                     to(numUserId,JSON.stringify({ action: 'MESSAGELIST', messageArr: null }))
                 }
             });
         }
@@ -204,7 +289,7 @@ webServer.on('connection', (ws) => {
                 }
             });
         }
-        console.log(jsonMessage.data);
+       // console.log(jsonMessage.data);
     });
     // при разврыве соединения
     ws.on('close', function incoming(message) {
@@ -213,14 +298,14 @@ webServer.on('connection', (ws) => {
         delete userArr[userId];
         delete sockets[userId];
         //calcUserArr();
-        console.log(userArr);
+       // console.log(userArr);
     });
 
 });
 function getContacts(login)
 {
     contactFlag = false;
-    contactArr = [];
+    contactUserArr = [];
     var query = usersDB.findOne().where({'login':login});
     
     query.exec(function (err, user) {
@@ -228,9 +313,9 @@ function getContacts(login)
         {
             for (let i = 0; i < user.contactArr.length;i++)
             {
-                contactArr.push(user.contactArr[i].loginHost);
+                contactUserArr.push(user.contactArr[i].loginHost);
             }
-            console.log(contactArr);
+            console.log(contactUserArr);
             contactFlag = true;
         }
     });
@@ -251,7 +336,7 @@ function calcUserArr(str='') // функция расчитать список �
         console.log('ERR: '+err);
         for (let i = 0; i < users.length;i++)
         {
-           console.log(users[i].login)
+          // console.log(users[i].login)
            userArrLogin.push(users[i].login);
         }
         ;
