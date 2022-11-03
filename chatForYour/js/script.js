@@ -113,11 +113,16 @@ window.onload = function () {
                     {
                         document.querySelectorAll('.divUser').forEach(function (elem) {
                             let text = elem.firstChild.innerHTML;
-                            if (text!=selectHost)
+                            let textRes=text.replace(/<span(.*?)<\/span>/g, '');
+                            alert(textRes);
+                            if (textRes==jsonMessage.sender)
                             {
-                                elem.firstChild.innerHTML = text+' +1';   
+                                //elem.firstChild.innerHTML = text;  
+                                //let text2 = elem.lastChild.innerHTML;
+                                elem.firstChild.lastChild.innerHTML = '+1';
+ 
                             }
-
+                      
                         });
                     }
                 }break;
@@ -280,11 +285,19 @@ function createElem(text,receive=0,className='')// создать елемент
     div.innerHTML = "<p>"+text+"</p>";
     return div;
 }
+function createUserDiv(text,countMes)
+{
+    let div = document.createElement('div');
+    div.className = 'divUser';
+    div.innerHTML="<p>"+text+"<span>"+(countMes==0?'':('+'+countMes))+"</span>"+"</p>";
+    return div;
+}
 function insertElem(elem,className='')// вставить элемент
 {
     if (className == '') className = 'message-box';
     var divBox=document.getElementById(className);
     divBox.append(elem);
+  
 }
 function clearChat()
 {
@@ -299,9 +312,10 @@ function updateChat(text,receive)
     var elem=createElem(text,receive);
     insertElem(elem);
 }
-function addUser(text)// добавить пользователя
+function addUser(text,countMes=0)// добавить пользователя
 {
-    var elem = createElem(text, 0, 'divUser');
+    //var elem = createElem(text, 0, 'divUser');
+    var elem=createUserDiv(text,countMes)
     userListName.push(text);
     elem.id = text;
     insertElem(elem, 'divUserList');

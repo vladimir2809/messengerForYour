@@ -99,6 +99,11 @@ h3{
     margin-right:5px;
     
 }
+.divUser span{
+    display:inline;
+    margin-right:10px;
+    float:right;
+}
 .divUser:hover {
     background-color:red;
 }
