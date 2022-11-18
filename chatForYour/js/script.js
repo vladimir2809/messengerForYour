@@ -114,7 +114,7 @@ window.onload = function () {
                         document.querySelectorAll('.divUser').forEach(function (elem) {
                             let text = elem.firstChild.innerHTML;
                             let textRes=text.replace(/<span(.*?)<\/span>/g, '');
-                            alert(textRes);
+                            //alert(textRes);
                             if (textRes==jsonMessage.sender)
                             {
                                 //elem.firstChild.innerHTML = text;  
@@ -249,7 +249,7 @@ function wsSendPing() {
 setInterval(function () {
 
     let arr = document.querySelectorAll('.divUser');//;.forEach(function (elem){
-    console.log(arr);
+   // console.log(arr);
     for (let i = 0; i < arr.length;i++)
     {
         //if ('<p>'+selectHost+'</p>' == elem.innerHTML)
