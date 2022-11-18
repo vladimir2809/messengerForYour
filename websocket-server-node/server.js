@@ -29,6 +29,9 @@ var contact={
     countMes:0,
 }
 var contactUserArr = [];
+var countMessage = [];
+var countMesFlag=false;
+var countMesTrigerFlag = false;
 var contactFlag = false;
 // функция отправки сообщения конкретному сокету
 function to(user, data) {
@@ -133,23 +136,39 @@ webServer.on('connection', (ws) => {
             
            
             getContacts(userArr[userArr.length - 1].login);
+           // getCountMessage('1');
             var interval = setInterval(function () {
-                if (contactFlag==true)
+                if (contactFlag==true )
                 {
                     //var userArrLogin = loginArr.arr;
                     var userArrLogin = contactUserArr;
                     console.log('USERARRLOGIN: '+userArrLogin);
-                    for (let i = 0; i < userArr.length;i++)
+                    if (countMesTrigerFlag==false)
                     {
-                        if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
-                        {
-                            to(i,JSON.stringify({action:'USERS',loginArr:userArrLogin}));
-                            console.log('i='+i);
-                        }
-                    //}
-
+                        getCountMessage(userArrLogin);
+                        countMesTrigerFlag = true;
                     }
-                    clearInterval(interval);
+                    if (countMesFlag==true)
+                    {
+
+                        for (let i = 0; i < userArr.length;i++)
+                        {
+                            if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
+                            {
+                                to(i,JSON.stringify({action:'USERS',loginArr:userArrLogin}));
+                                console.log('i='+i);
+                            }
+                        //}
+
+                        }
+                        console.log(countMessage);
+                        let time = new Date();
+                        console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds());
+                        countMesTrigerFlag = false;
+                        clearInterval(interval);
+                        
+                    }
+                    
                 }
             }, 100);
         }
@@ -168,8 +187,14 @@ webServer.on('connection', (ws) => {
                 {
                     // сохраним сообшение в конкретную ветку 
                     console.log('\n Document' + doc1);
-                    var query=doc1.updateOne({$push:{ 
-                        messageArr: { "loginSender": jsonMessage.sender,"message":jsonMessage.data }
+                    var query=doc1.updateOne({
+                        $push:{ 
+                            messageArr: { 
+                                "loginSender": jsonMessage.sender,
+                                "loginHost": jsonMessage.host,
+                                "message":jsonMessage.data,
+                                'time':Date.now(),
+                            }
                     } });
                     query.exec(function (err, res) {
                         console.log(res);
@@ -182,7 +207,7 @@ webServer.on('connection', (ws) => {
                     var newMessage = new messagesDB({
                         login1: jsonMessage.sender,
                         login2: jsonMessage.host,
-                        messageArr: [{ loginSender: jsonMessage.sender, message: jsonMessage.data }],
+                        messageArr: [{ loginSender: jsonMessage.sender,loginHost: jsonMessage.host, message: jsonMessage.data, time:Date.now() }],
                     });
                     console.log('NEW MESSAGE');
                     newMessage.save(function (err, doc) {
@@ -238,8 +263,8 @@ webServer.on('connection', (ws) => {
                 {$and: [{'login2': jsonMessage.sender}, {'login1': jsonMessage.host }]},
             ]);
             query.exec(function (err, doc) {
-                console.log('MESSAGELIST');
-                console.log(doc);
+                //console.log('MESSAGELIST');
+                //console.log(doc);
                 let numUserId = null;
                 for (let i = 0; i < userArr.length;i++)
                 {
@@ -302,6 +327,56 @@ webServer.on('connection', (ws) => {
     });
 
 });
+function getCountMessage(loginArr)
+{
+    console.log('COUNT MESSAGE');
+    countMessage = [];
+    countMesFlag=false
+    let count = 0;
+    let loginHost = '';
+    var query = messagesDB.find();
+    query.exec(function (err, mesArr) {
+        console.log('USERS USERS');
+        console.log(mesArr);
+        for (let k = 0; k < loginArr.length;k++)
+        {
+            if (loginArr[k]!=userArr[userArr.length - 1].login)
+            {
+                count = 0;
+                for (let i = 0; i < mesArr.length;i++)
+                { 
+                    if (loginArr[k]==mesArr[i].login1 || loginArr[k]==mesArr[i].login2)
+                    {
+                    
+                        for (let j = 0; j < mesArr[i].messageArr.length;j++)
+                        {
+                            if (/*loginArr[k]*/userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginSender)
+                            {
+                   
+                                if (mesArr[i].messageArr[j].time < Date.now())
+                                {
+                                    count++;            
+                                    //loginHost = mesArr[i].messageArr[j].loginSender;
+                                    //loginHost = loginArr[k];
+                                }
+                            }
+                        }
+                    
+                    }
+                    console.log(mesArr[i]); 
+                }
+            
+            
+                countMessage.push({login:loginArr[k],countMes:count});
+                console.log('PUSH COUNT'); 
+            }
+        }
+      //  console.log(countMessage);
+        countMesFlag = true;
+    });
+
+
+}
 function getContacts(login)
 {
     contactFlag = false;
