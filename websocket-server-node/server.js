@@ -155,7 +155,7 @@ webServer.on('connection', (ws) => {
                         {
                             if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
                             {
-                                to(i,JSON.stringify({action:'USERS',loginArr:userArrLogin}));
+                                to(i,JSON.stringify({action:'USERS',loginArr:userArrLogin,countMessage:countMessage}));
                                 console.log('i='+i);
                             }
                         //}
