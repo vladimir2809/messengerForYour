@@ -107,7 +107,7 @@ window.onload = function () {
                 {
                     if (jsonMessage.sender==selectHost)
                     {
-                        updateChat(jsonMessage.data, 1);
+                        updateChat(jsonMessage.data, 0);
                     }
                     else
                     {
@@ -130,14 +130,18 @@ window.onload = function () {
             case 'USERS':// пришел список пользователей
                 {
                     updateUserList(jsonMessage.loginArr);
+                    console.log(jsonMessage.countMessage);
                     for (let i = 0; i<jsonMessage.loginArr.length; i++)
                     {
-                        if (jsonMessage.loginArr[i]==jsonMessage.countMessage[i].login)
+                        for (let j = 0; j<jsonMessage.countMessage.length; j++)
                         {
-                            updateCountMessage(jsonMessage.loginArr[i], jsonMessage.countMessage[i].countMes);
+                            if (jsonMessage.loginArr[i]==jsonMessage.countMessage[j].login)
+                            {
+                                updateCountMessage(jsonMessage.loginArr[i], jsonMessage.countMessage[j].countMes);
+                            }
                         }
                     }
-                    console.log(jsonMessage.countMessage);
+                   
                 }
                 break;
              case 'YESLOGIN':// пришел список пользователей
@@ -375,7 +379,7 @@ function sendMessage()
      
     var text = textarea.value; 
     textarea.value= '';  
-    updateChat(text,0);      
+    updateChat(text,1);      
     wsSendText(text);
     wsSendMessage(myLogin, selectHost, text);
    
