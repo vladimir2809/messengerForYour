@@ -17,7 +17,7 @@ var usersSchema = new Schema ({
 var messagesSchema = new Schema ({
     login1:{type: String , index:1, required:true, /*unique:true*/},
     login2:{type: String , index:1, required:true, /*unique:true*/},
-    messageArr:[ {loginSender:String,loginHost:String,message:String,time:Number} ],
+    messageArr:[ {loginSender:String,loginHost:String,message:String,status:Number} ],
     //first:{type: String, index:1},
     //last:String,
     //size:Number,

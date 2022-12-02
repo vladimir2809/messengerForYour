@@ -193,7 +193,7 @@ webServer.on('connection', (ws) => {
                                 "loginSender": jsonMessage.sender,
                                 "loginHost": jsonMessage.host,
                                 "message":jsonMessage.data,
-                                'time':Date.now(),
+                                'status':1,
                             }
                     } });
                     query.exec(function (err, res) {
@@ -207,7 +207,7 @@ webServer.on('connection', (ws) => {
                     var newMessage = new messagesDB({
                         login1: jsonMessage.sender,
                         login2: jsonMessage.host,
-                        messageArr: [{ loginSender: jsonMessage.sender,loginHost: jsonMessage.host, message: jsonMessage.data, time:Date.now() }],
+                        messageArr: [{ loginSender: jsonMessage.sender,loginHost: jsonMessage.host, message: jsonMessage.data,status:1 }],
                     });
                     console.log('NEW MESSAGE');
                     newMessage.save(function (err, doc) {
@@ -353,7 +353,7 @@ function getCountMessage(loginArr)
                             if (/*loginArr[k]*/userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginSender)
                             {
                    
-                                if (mesArr[i].messageArr[j].time < Date.now())
+                                if (mesArr[i].messageArr[j].status == 1)
                                 {
                                     count++;            
                                     //loginHost = mesArr[i].messageArr[j].loginSender;
