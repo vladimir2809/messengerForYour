@@ -111,25 +111,33 @@ window.onload = function () {
                     }
                     else
                     {
-                        document.querySelectorAll('.divUser').forEach(function (elem) {
-                            let text = elem.firstChild.innerHTML;
-                            let textRes=text.replace(/<span(.*?)<\/span>/g, '');
-                            //alert(textRes);
-                            if (textRes==jsonMessage.sender)
-                            {
-                                //elem.firstChild.innerHTML = text;  
-                                //let text2 = elem.lastChild.innerHTML;
-                                elem.firstChild.lastChild.innerHTML = '+1';
+                        updateCountMessage(jsonMessage.sender, 1);
+                        //document.querySelectorAll('.divUser').forEach(function (elem) {
+                        //    let text = elem.firstChild.innerHTML;
+                        //    let textRes=text.replace(/<span(.*?)<\/span>/g, '');
+                        //    //alert(textRes);
+                        //    if (textRes==jsonMessage.sender)
+                        //    {
+                        //        //elem.firstChild.innerHTML = text;  
+                        //        //let text2 = elem.lastChild.innerHTML;
+                        //        elem.firstChild.lastChild.innerHTML = '+1';
  
-                            }
+                        //    }
                       
-                        });
+                        //});
                     }
                 }break;
             case 'USERS':// пришел список пользователей
                 {
                     updateUserList(jsonMessage.loginArr);
-                   
+                    for (let i = 0; i<jsonMessage.loginArr.length; i++)
+                    {
+                        if (jsonMessage.loginArr[i]==jsonMessage.countMessage[i].login)
+                        {
+                            updateCountMessage(jsonMessage.loginArr[i], jsonMessage.countMessage[i].countMes);
+                        }
+                    }
+                    console.log(jsonMessage.countMessage);
                 }
                 break;
              case 'YESLOGIN':// пришел список пользователей
@@ -178,7 +186,11 @@ window.onload = function () {
                             var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
                             updateChat(jsonMessage.messageArr[i].message, receive);
                         }
+                        let messageBox = document.getElementById('message-box');    
+                        let height =     document.getElementById("message-box").scrollHeight;
+                        messageBox.scrollTo(0,height);
                     }
+
                 }
                break;
              case 'SEARCHRESULT' :
@@ -203,6 +215,22 @@ window.onload = function () {
         console.log(jsonMessage);
     };
 
+}
+function updateCountMessage(login,value)
+{
+    document.querySelectorAll('.divUser').forEach(function (elem) {
+        let text = elem.firstChild.innerHTML;
+        let textRes=text.replace(/<span(.*?)<\/span>/g, '');
+        //alert(textRes);
+        if (textRes==login)
+        {
+            //elem.firstChild.innerHTML = text;  
+            //let text2 = elem.lastChild.innerHTML;
+            elem.firstChild.lastChild.innerHTML = '+'+value;
+ 
+        }
+                      
+    });
 }
 function updateUserList(listUser)
 {
