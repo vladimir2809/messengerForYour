@@ -135,7 +135,8 @@ window.onload = function () {
                     {
                         for (let j = 0; j<jsonMessage.countMessage.length; j++)
                         {
-                            if (jsonMessage.loginArr[i]==jsonMessage.countMessage[j].login)
+                            if (jsonMessage.loginArr[i]==jsonMessage.countMessage[j].login &&
+                               jsonMessage.countMessage[j].countMes>0 )
                             {
                                 updateCountMessage(jsonMessage.loginArr[i], jsonMessage.countMessage[j].countMes);
                             }
