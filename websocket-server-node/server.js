@@ -279,7 +279,53 @@ webServer.on('connection', (ws) => {
                 }
                 if (doc!=null)
                 {
-                    to(numUserId,JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }))
+                    to(numUserId, JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }));
+                    console.log(doc);
+                    for (let i = 0; i < doc.messageArr.length;i++)
+                    {
+                        if (doc.messageArr[i].loginHost==userArr[numUserId].login)
+                        {
+                            doc.messageArr[i].status = 2;
+                        }
+                    }
+                    doc.save(function (err, res) {
+                        console.log('status change');
+                    })
+                    //var query=doc1.updateOne({
+                    //$push:{ 
+                    //    messageArr: { 
+                    //        "loginSender": jsonMessage.sender,
+                    //        "loginHost": jsonMessage.host,
+                    //        "message":jsonMessage.data,
+                    //        'status':1,
+                    //    }
+                    //} });
+                    //query.exec(function (err, res) {
+                    //    console.log(res);
+
+                    //});
+                    //var query1=doc.find({
+                    //    $elemMatch:{ 
+                    //        messageArr: {
+                    //            'status':1,
+                    //        }
+                    //} });
+                    //query1.exec(function (err, doc1) {
+                    //    console.log(doc1);
+                    //    var query2 = doc1.update({
+                    //        'status': 2,
+                    //    });
+                    //    query2.exec(function (err, res) {
+                    //        console.log(res);
+                    //    })
+                        
+
+                    //});
+                    //var query1 = messagesDB.find().or([{'login1':userArr[numUserId].login},{'login2':userArr[numUserId].login}]);
+                    //query1.exec(function (err, doc1) {
+                    //    console.log(doc1);
+                    //}
+                    //);
                 }
                 else
                 {
@@ -350,7 +396,7 @@ function getCountMessage(loginArr)
                     
                         for (let j = 0; j < mesArr[i].messageArr.length;j++)
                         {
-                            if (/*loginArr[k]*/userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginSender)
+                            if (/*loginArr[k]*/userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginHost)
                             {
                    
                                 if (mesArr[i].messageArr[j].status == 1)
