@@ -39,9 +39,11 @@ function to(user, data) {
     if(sockets[user] && sockets[user].readyState === WebSocket.OPEN)
         sockets[user].send(data);
 }
+// сооединение с бд
 mongoose.connection.on('open', function () {
     console.log('mongoose open');
 });
+//соединение
 webServer.on('connection', (ws) => {
 
     const userId = countUser;
@@ -54,7 +56,7 @@ webServer.on('connection', (ws) => {
     sockets[userId] = ws;
     console.log('connect');
     console.log(userArr);
-
+    // пришло сообшение на сервер
     ws.on('message', function incoming(message) {
         // Or get user in here
         var jsonMessage = JSON.parse(message);// распарским сообшение от клиентов
@@ -76,23 +78,12 @@ webServer.on('connection', (ws) => {
             });
 
         }
-        else if (jsonMessage.action == 'LOGIN')// пользователь вошел в систему
+        else if (jsonMessage.action == 'LOGIN')// пользователь входит в систему
         {
             userArr[userArr.length - 1].login = jsonMessage.data;
             userArr[userArr.length - 1].raceMess = true;
-
-        //    console.log(userArr);
             let login = userArr[userArr.length - 1].login;
             let flagDoubleLogin = false;
-            //saveUserBd(jsonMessage.data);
-            //var newUser = new usersDB({
-            //    login: jsonMessage.data,
-            //});
-            //console.log('Is Document new?' + newUser.isNew+ newUser);
-            //newUser.save(function (err, doc) {
-            //    console.log("\nSaved document: " + doc + '\n' + err);
-            //}); 
-            // calcUserArr();
             for (let i = 0; i < userArr.length-1;i++)
             {
                 var numLength = userArr.length - 1;
@@ -134,21 +125,20 @@ webServer.on('connection', (ws) => {
                 });
             }
             
-           
-            getContacts(userArr[userArr.length - 1].login);
-           // getCountMessage('1');
+            // отрпавка списка пользователей и количества не прочитанных сообщений
+            getContacts(userArr[userArr.length - 1].login);// получить список контактов
             var interval = setInterval(function () {
-                if (contactFlag==true )
+                if (contactFlag==true )// если список контактов получен
                 {
                     //var userArrLogin = loginArr.arr;
                     var userArrLogin = contactUserArr;
                     console.log('USERARRLOGIN: '+userArrLogin);
                     if (countMesTrigerFlag==false)
                     {
-                        getCountMessage(userArrLogin);
+                        getCountMessage(userArrLogin);// получить список количества не прочитанных сообшений
                         countMesTrigerFlag = true;
                     }
-                    if (countMesFlag==true)
+                    if (countMesFlag==true)// если список не прочитанных сообшений получен
                     {
 
                         for (let i = 0; i < userArr.length;i++)
@@ -228,6 +218,7 @@ webServer.on('connection', (ws) => {
 
                        // }};
                         });
+                        // сохраним новый контакт у получателя
                         var queryUserHost = usersDB.findOne().where({ login: jsonMessage.host }); 
                         queryUserHost.exec(function (err, user){
                             var queryContact = user.updateOne({
@@ -248,6 +239,7 @@ webServer.on('connection', (ws) => {
                     
                 }
             });
+            // отправка пользовательских сообшений
             for (let i = 0; i < userArr.length;i++)
             {
                 if (userArr[i] && userArr[i].login==jsonMessage.host && userArr[i].raceMess==true)
@@ -256,16 +248,16 @@ webServer.on('connection', (ws) => {
                 }
             }
         }
-        else if(jsonMessage.action=='GETMESSAGELIST')
+        else if(jsonMessage.action=='GETMESSAGELIST')// пришел запрос получить список сообшений
         {
+            //запрос в бд на поиск конкретной ветки сообшений
              var query = messagesDB.findOne().or([
                 {$and: [{'login1': jsonMessage.sender}, {'login2': jsonMessage.host} ]},
                 {$and: [{'login2': jsonMessage.sender}, {'login1': jsonMessage.host }]},
             ]);
             query.exec(function (err, doc) {
-                //console.log('MESSAGELIST');
-                //console.log(doc);
                 let numUserId = null;
+                // расчитаваем ид сокета отправителя 
                 for (let i = 0; i < userArr.length;i++)
                 {
                     if (userArr[i] && userArr[i].login==jsonMessage.sender && userArr[i].raceMess==true)
@@ -273,14 +265,12 @@ webServer.on('connection', (ws) => {
                         numUserId = i;
                         break;
                     }
-
-                //}
-
                 }
-                if (doc!=null)
+                if (doc!=null)// если есть результа запроса от бд
                 {
-                    to(numUserId, JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr }));
+                    
                     console.log(doc);
+                    // присваеваем сообшениям которые отправятся в списке статус 2 (прочитано)
                     for (let i = 0; i < doc.messageArr.length;i++)
                     {
                         if (doc.messageArr[i].loginHost==userArr[numUserId].login)
@@ -288,44 +278,14 @@ webServer.on('connection', (ws) => {
                             doc.messageArr[i].status = 2;
                         }
                     }
+                    // сохраняем елемент коллекции в бд
                     doc.save(function (err, res) {
                         console.log('status change');
-                    })
-                    //var query=doc1.updateOne({
-                    //$push:{ 
-                    //    messageArr: { 
-                    //        "loginSender": jsonMessage.sender,
-                    //        "loginHost": jsonMessage.host,
-                    //        "message":jsonMessage.data,
-                    //        'status':1,
-                    //    }
-                    //} });
-                    //query.exec(function (err, res) {
-                    //    console.log(res);
-
-                    //});
-                    //var query1=doc.find({
-                    //    $elemMatch:{ 
-                    //        messageArr: {
-                    //            'status':1,
-                    //        }
-                    //} });
-                    //query1.exec(function (err, doc1) {
-                    //    console.log(doc1);
-                    //    var query2 = doc1.update({
-                    //        'status': 2,
-                    //    });
-                    //    query2.exec(function (err, res) {
-                    //        console.log(res);
-                    //    })
-                        
-
-                    //});
-                    //var query1 = messagesDB.find().or([{'login1':userArr[numUserId].login},{'login2':userArr[numUserId].login}]);
-                    //query1.exec(function (err, doc1) {
-                    //    console.log(doc1);
-                    //}
-                    //);
+                    });
+                    // отправляем список сообшений
+                    to(numUserId, JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr,countMessage:countMessage }));
+           
+                   
                 }
                 else
                 {
@@ -333,14 +293,15 @@ webServer.on('connection', (ws) => {
                 }
             });
         }
-        else if(jsonMessage.action=='SEARCH')
+        else if(jsonMessage.action=='SEARCH')/// присшел запрос на поиск пользователей
         {
-            calcUserArr();
+            calcUserArr();// расчитать список всех пользователей
             var interval=setInterval(function () {
-                if (loginArr.flag==true)
+                if (loginArr.flag==true)// если список пользолвателей расчитан
                 {
                     var text = jsonMessage.data;
                     var resultArr = [];
+                    // поиск совпадений
                     for (let i = 0; i < loginArr.arr.length;i++)
                     {
                         if (loginArr.arr[i].indexOf(text) != -1)
@@ -348,6 +309,7 @@ webServer.on('connection', (ws) => {
                             resultArr.push(loginArr.arr[i]);
                         }
                     }
+                    // отправка результа поиска
                     for (let i = 0; i < userArr.length;i++)
                     {
                         if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
@@ -373,7 +335,7 @@ webServer.on('connection', (ws) => {
     });
 
 });
-function getCountMessage(loginArr)
+function getCountMessage(loginArr)// получить список количества не прочитанных сообщений
 {
     console.log('COUNT MESSAGE');
     countMessage = [];
@@ -423,7 +385,7 @@ function getCountMessage(loginArr)
 
 
 }
-function getContacts(login)
+function getContacts(login)// получить спиоск контактов
 {
     contactFlag = false;
     contactUserArr = [];
@@ -445,42 +407,22 @@ function calcUserArr(str='') // функция расчитать список �
 {
     let userArrLogin = [];
     loginArr.flag = false;
-    //for (let i = 0; i < userArr.length;i++)
-    //{
-    //    if (userArr[i])    userArrLogin.push(userArr[i].login);
-    //}
     var query = usersDB.find();
     query.select('login');
-  //  console.log(query);
     query.exec(function (err, users) {
         console.log('USER LIST: ');
         console.log('ERR: '+err);
         for (let i = 0; i < users.length;i++)
         {
-          // console.log(users[i].login)
            userArrLogin.push(users[i].login);
         }
         ;
         loginArr.arr = userArrLogin;
         loginArr.flag = true
-        //for (let i = 0; i < userArr.length;i++)
-        //{
-        //    if (userArr[i] && userArr[i].raceMess==true)
-        //    {
-        //        to(i,JSON.stringify({action:'USER',loginArr:userArrLogin}));
-        //        console.log('i='+i);
-        //    }
-        //}
-    }); 
-    //setTimeout(function () {
-    //    if (flag==true)
-    //    {
-
-    //    }
-    //}, 100);
+    });
    
 }
-function saveUserBd (login)
+function saveUserBd (login)// сохранить пользователя в бж
 {
     var newUser = new usersDB({
         login: login,
