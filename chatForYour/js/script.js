@@ -12,17 +12,10 @@ window.onload = function () {
     updateChat('dct good',1);
     var button = document.getElementById('button');
     button.onclick=function(){
-        sendMessage();
-        //var textarea = document.getElementById('textarea');
-     
-        //var text = textarea.value;  
-        //updateChat(text,0);      
-        //wsSendText(text);
-        //wsSendMessage('', selectHost, text); 
-
+        sendMessage(); 
     }
     document.addEventListener('keydown', function(event) {
-        if (event.code == 'Enter' && (event.ctrlKey || event.metaKey) ) 
+        if (event.code == 'Enter' && (event.ctrlKey || event.metaKey) ) // отправка сообшения ентер + cntr
         {
             if (document.querySelector(':focus').tagName && 
                  document.querySelector(':focus').tagName=='TEXTAREA')
@@ -86,6 +79,7 @@ window.onload = function () {
 
         
     }
+    // поиск
     var buttonSearch = document.getElementById('buttonSearch');
     buttonSearch.onclick=function () {
         var textSearch=document.getElementById('textAreaSearch').value;
@@ -112,19 +106,6 @@ window.onload = function () {
                     else
                     {
                         updateCountMessage(jsonMessage.sender, 1);
-                        //document.querySelectorAll('.divUser').forEach(function (elem) {
-                        //    let text = elem.firstChild.innerHTML;
-                        //    let textRes=text.replace(/<span(.*?)<\/span>/g, '');
-                        //    //alert(textRes);
-                        //    if (textRes==jsonMessage.sender)
-                        //    {
-                        //        //elem.firstChild.innerHTML = text;  
-                        //        //let text2 = elem.lastChild.innerHTML;
-                        //        elem.firstChild.lastChild.innerHTML = '+1';
- 
-                        //    }
-                      
-                        //});
                     }
                 }break;
             case 'USERS':// пришел список пользователей
@@ -152,36 +133,35 @@ window.onload = function () {
                     inSystemMessanger(myLogin);
                 }
                 break;
-             case 'NOLOGIN':// пришел список пользователей
+             case 'NOLOGIN':// нет такого логина 
                 {
                     labelIn.innerHTML= 'Нет такого логина';
                    
                    // inSystemMessanger(myLogin);
                 }
                 break;
-            case 'DOUBLELOGIN':// пришел список пользователей
+            case 'DOUBLELOGIN':// логин уже в системе
                 {
                    labelIn.innerHTML= 'Пользователь уже в системе';
                    
                 }
                 break;
-            case 'BEUSERNAME': 
+            case 'BEUSERNAME': // логин повторяется
                 {
                     labelReg.innerHTML = 'Уже есть такой логин'; 
                     alert ('REG')
                 }
-                break;// пришло сообшение о том что этот пользователь есть в системе
-             case 'NEWUSEROK': 
+                break;
+             case 'NEWUSEROK': // пользователь успешно зарегистрировался
                 {
                     //wsSendLogin(jsonMessage.login);
                     inSystemMessanger(jsonMessage.data);
                 }
                 break;
-             case 'MESSAGELIST': 
+             case 'MESSAGELIST': // пришел список сообшений
                 {
-                    //wsSendLogin(jsonMessage.login);
-                  //  inSystemMessanger(jsonMessage.data);
                     clearChat();
+                    let countStatusMes = 0;// количество не прочитанных сообшений
                     if (jsonMessage.messageArr!=null)
                     {
                         for (let i = 0; i < jsonMessage.messageArr.length;i++)
@@ -189,30 +169,25 @@ window.onload = function () {
                             console.log(jsonMessage.messageArr[i].message);
                             console.log(jsonMessage.messageArr[i].loginSender);
                             var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
+                            if (jsonMessage.messageArr[i].status==1)
+                            {
+                                countStatusMes++;
+                            }
                             updateChat(jsonMessage.messageArr[i].message, receive);
                         }
+                        updateCountMessage(selectHost, countStatusMes);// обновить счетчик-метку непрочитанных сообшений
                         let messageBox = document.getElementById('message-box');    
                         let height =     document.getElementById("message-box").scrollHeight;
                         messageBox.scrollTo(0,height);
+                        
+                        
                     }
 
                 }
                break;
-             case 'SEARCHRESULT' :
+             case 'SEARCHRESULT' :// пришел результат поиска
                 {
                     updateUserList(jsonMessage.loginArr);
-                    //wsSendLogin(jsonMessage.login);
-                   // inSystemMessanger(jsonMessage.data);
-                    //var element = document.getElementById("divUserList");
-                    //while (element.firstChild) 
-                    //{
-                    //    element.removeChild(element.firstChild);
-                    //}
-                    //for (let i = 0; i < jsonMessage.data.length; i++) 
-                    //{
-                    //    addUser(jsonMessage.data[i]);
-                    //    //alert(1);
-                    //}
                 }
                 break;
             
@@ -221,7 +196,7 @@ window.onload = function () {
     };
 
 }
-function updateCountMessage(login,value)
+function updateCountMessage(login,value)// функция обновления метки-счетчика не прочитанных сообщений
 {
     document.querySelectorAll('.divUser').forEach(function (elem) {
         let text = elem.firstChild.innerHTML;
@@ -231,13 +206,13 @@ function updateCountMessage(login,value)
         {
             //elem.firstChild.innerHTML = text;  
             //let text2 = elem.lastChild.innerHTML;
-            elem.firstChild.lastChild.innerHTML = '+'+value;
+            elem.firstChild.lastChild.innerHTML = value > 0 ? '+' + value : '';
  
         }
                       
     });
 }
-function updateUserList(listUser)
+function updateUserList(listUser)// функция обновления списка контактов
 {
     var element = document.getElementById("divUserList");
     while (element.firstChild) 
@@ -318,7 +293,7 @@ function createElem(text,receive=0,className='')// создать елемент
     div.innerHTML = "<p>"+text+"</p>";
     return div;
 }
-function createUserDiv(text,countMes)
+function createUserDiv(text,countMes)// создать метку для счетчика сообшений
 {
     let div = document.createElement('div');
     div.className = 'divUser';
@@ -332,7 +307,7 @@ function insertElem(elem,className='')// вставить элемент
     divBox.append(elem);
   
 }
-function clearChat()
+function clearChat()// очистить чат
 {
     var element = document.getElementById("message-box");
     while (element.firstChild) 
@@ -340,7 +315,7 @@ function clearChat()
         element.removeChild(element.firstChild);
     }
 }
-function updateChat(text,receive)
+function updateChat(text,receive)// добавить в чат сообшение
 {
     var elem=createElem(text,receive);
     insertElem(elem);
@@ -368,13 +343,13 @@ function addUser(text,countMes=0)// добавить пользователя
          };
   //  });
 }
-function strip_tags(originalString)
+function strip_tags(originalString)// функция удаления спец символов html
 {
     const strippedString = originalString.replace(/(<([^>]+)>)/gi, "");
     console.log(strippedString);
     return strippedString;
 }
-function sendMessage()
+function sendMessage()// отправить сообшение
 {
     var textarea = document.getElementById('textarea');
      
@@ -386,7 +361,7 @@ function sendMessage()
    
 
 }
-function inSystemMessanger(login='')
+function inSystemMessanger(login='')// вход в систему
 {
    var divMain=document.getElementById('divMain');
     divMain.style.display = 'block';
