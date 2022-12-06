@@ -28,9 +28,15 @@ var contact={
     login:'',
     countMes:0,
 }
+var pingObj = {
+    login:null,
+    lastTime:0,
+    onlineStatus:false,
+}
 var contactUserArr = [];
 var countMessage = [];
 var countMesFlag=false;
+var pingArr = [];
 var countMesTrigerFlag = false;
 var contactFlag = false;
 // функция отправки сообщения конкретному сокету
@@ -322,6 +328,25 @@ webServer.on('connection', (ws) => {
                 }
             });
         }
+        else if (jsonMessage.action=="PING")
+        {
+           // console.log('Ping '+jsonMessage.user);
+            let flag = false;
+            let time = new Date().getTime();
+            for (let i = 0; i < pingArr.length;i++)
+            {
+                if (jsonMessage.user==pingArr[i].login)
+                {
+                    pingArr[i].lastTime = time;
+                    pingArr[i].onlineStatus = true;  
+                    flag = true;
+                }
+            }
+            if (flag==false)
+            {
+                pingArr.push({login:jsonMessage.user,lastTime:time,onlineStatus:true});
+            }
+        }
        // console.log(jsonMessage.data);
     });
     // при разврыве соединения
@@ -335,6 +360,33 @@ webServer.on('connection', (ws) => {
     });
 
 });
+setInterval(function () {
+    let time=new Date().getTime();
+    for (let i = 0;i < pingArr.length;i++)
+    {
+        if (time>pingArr[i].lastTime+2000)
+        {
+            pingArr[i].onlineStatus = false;  
+        }
+    }
+    let userListOnline = [];
+    for (let i = 0; i < pingArr.length;i++)
+    {
+        if (pingArr[i].onlineStatus==true)
+        {
+            userListOnline.push(pingArr[i].login);
+        }
+    }
+    console.log(userListOnline)
+    for (let i = 0; i < userArr.length;i++)
+    {
+        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+        {
+            to(userArr[i].id, JSON.stringify({ action: 'LISTUSERONLINE', userList: userListOnline }));
+        }
+                        
+    }
+},500);
 function getCountMessage(loginArr)// получить список количества не прочитанных сообщений
 {
     console.log('COUNT MESSAGE');
