@@ -91,7 +91,7 @@ h3{
 .divUser{
     background-color:rgb(182, 255, 0);
     width:230px;
-    height:35px;
+    height:55px;
     text-align:center;
     border-radius:15px;
 
@@ -107,9 +107,13 @@ h3{
 .divUser:hover {
     background-color:red;
 }
+.divUser .onlineP p {
+        padding-top: 1px;
+    }
 .divUser p {
-    padding-top:7px;
+    padding-top:17px;
 }
+
 #divChat{
     float:right;
      width:500px;

@@ -1,5 +1,6 @@
 const myWs = new WebSocket('ws://localhost:9000');
 var userListName = [];// масси вимен пользователей
+var userOnlineArr = [];
 var numSelectHost = null;
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
  var labelReg=null;
@@ -190,6 +191,17 @@ window.onload = function () {
                     updateUserList(jsonMessage.loginArr);
                 }
                 break;
+              case 'LISTUSERONLINE' :// пришел результат поиска
+                {
+                    userOnlineArr = [];
+                    for (let i = 0; i < jsonMessage.userList.length;i++)
+                    {
+                        userOnlineArr.push(jsonMessage.userList[i]);
+                    }
+                    console.log("USERS ONLINE");
+                    console.log(userOnlineArr);
+                }
+                break;
             
         }
         console.log(jsonMessage);
@@ -250,8 +262,8 @@ function wsSendSearch(str) {
     myWs.send(JSON.stringify({action: 'SEARCH', data: str.toString()}));
 }
 // функция для отправки команды ping на сервер
-function wsSendPing() {
-    myWs.send(JSON.stringify({action: 'PING'}));
+function wsSendPing(login) {
+    myWs.send(JSON.stringify({action: 'PING',user:login}));
 }
 // постоянный цикл 
 setInterval(function () {
@@ -267,8 +279,26 @@ setInterval(function () {
         }
         else
         {
-            arr[i].style.backgroundColor = 'rgb(0,255,0)';
+            arr[i].style.backgroundColor = 'rgb(100,255,100)';
         }
+        let flag = false;
+        for (let j = 0; j < userOnlineArr.length;j++)
+        {
+            if (userListName[i]==userOnlineArr[j])
+            //if (1==1)
+            {
+               // arr[i].style.backgroundColor = 'rgb(150,150,255)';
+                arr[i].lastChild.innerHTML = 'online';
+                flag = true;
+            }
+            
+          
+        } 
+        if (flag==false)
+        {
+                 arr[i].lastChild.innerHTML = '';
+        }
+
     }
             
        
@@ -276,6 +306,14 @@ setInterval(function () {
   //  console.log(document.querySelector(':focus').tagName);
 
 },100);
+
+setInterval(function () {
+    if (myLogin!=null)
+    {
+        wsSendPing(myLogin);
+    }
+},1000);
+
 function createElem(text,receive=0,className='')// создать елемент
 {
     let div = document.createElement('div');
@@ -297,7 +335,7 @@ function createUserDiv(text,countMes)// создать метку для сче�
 {
     let div = document.createElement('div');
     div.className = 'divUser';
-    div.innerHTML="<p>"+text+"<span>"+(countMes==0?'':('+'+countMes))+"</span>"+"</p>";
+    div.innerHTML="<p>"+text+"<span>"+(countMes==0?'':('+'+countMes))+"</span>"+"</p>"+"<p class='onlineP'>online</p>";
     return div;
 }
 function insertElem(elem,className='')// вставить элемент
@@ -327,7 +365,13 @@ function addUser(text,countMes=0)// добавить пользователя
     userListName.push(text);
     elem.id = text;
     insertElem(elem, 'divUserList');
-
+    var onlineP = document.querySelectorAll('.onlineP');
+    for (let i = 0; i < onlineP.length;i++)
+    {
+        onlineP[i].style.position ='relative' ;
+        onlineP[i].style.top = '-35px';
+        onlineP[i].style.left = '-80px';
+    }
   //  document.querySelectorAll('.divUser').forEach(function (elem){
         //elem.addEventListener('click', function () { 
         elem.onclick= function () { 
