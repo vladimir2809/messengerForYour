@@ -6,6 +6,7 @@ var selectHost = ''; // выбранный пользователь для от�
  var labelReg=null;
  var labelIn=null;
 var myLogin = null;
+var imInSystem = false;
 window.onload = function () {
     labelReg=document.getElementById('labelRegP');
     labelIn=document.getElementById('labelInP');
@@ -38,33 +39,34 @@ window.onload = function () {
     buttonReg.onclick = function () {
         var login = document.getElementById('loginReg').value;    
         var name = document.getElementById('nameReg').value;
-        var surname = document.getElementById('surnameReg').value;
+        var surName = document.getElementById('surnameReg').value;
         var password = document.getElementById('passwordReg').value;
         var password2=document.getElementById('password2Reg').value;
         if  (login=='')
         {
             labelReg.innerHTML = "Введите логин";
         }
-        //else  if  (name=='')
-        //{
-        //    labelReg.innerHTML = "Введите имя";
-        //}
-        //else  if  (surname=='')
-        //{
-        //    labelReg.innerHTML = "Введите Фамилию";
-        //}
-        //else  if  (password=='')
-        //{
-        //    labelReg.innerHTML = "Введите пароль";
-        //}
-        //else if (password!=password2)
-        //{
+        else  if  (name=='')
+        {
+            labelReg.innerHTML = "Введите имя";
+        }
+        else  if  (surname=='')
+        {
+            labelReg.innerHTML = "Введите Фамилию";
+        }
+        else  if  (password=='')
+        {
+            labelReg.innerHTML = "Введите пароль";
+        }
+        else if (password!=password2)
+        {
             
-        //    labelReg.innerHTML = "Пароли не совпадают.";
-        //} 
+            labelReg.innerHTML = "Пароли не совпадают.";
+        } 
         else
         {
-            wsSendRegistration(login); 
+            myLogin=login;
+            wsSendRegistration(login,name,surName,password); 
             //alert('регистрация');
         }
        // console.log(password);
@@ -73,9 +75,10 @@ window.onload = function () {
     var buttonLogin = document.getElementById('submit');
     buttonLogin.onclick = function () {
         myLogin=document.getElementById('login').value;
+        let password=document.getElementById('password').value;
        // inSystemMessanger(myLogin);
-    
-        wsSendLogin(myLogin);
+        let passwordMD5 = MD5(password);
+        wsSendLogin(myLogin,passwordMD5);
        
 
         
@@ -136,7 +139,7 @@ window.onload = function () {
                 break;
              case 'NOLOGIN':// нет такого логина 
                 {
-                    labelIn.innerHTML= 'Нет такого логина';
+                    labelIn.innerHTML= 'Логин или пароль не верен';
                    
                    // inSystemMessanger(myLogin);
                 }
@@ -156,6 +159,7 @@ window.onload = function () {
              case 'NEWUSEROK': // пользователь успешно зарегистрировался
                 {
                     //wsSendLogin(jsonMessage.login);
+                    myLogin = jsonMessage.data;
                     inSystemMessanger(jsonMessage.data);
                 }
                 break;
@@ -191,7 +195,7 @@ window.onload = function () {
                     updateUserList(jsonMessage.loginArr);
                 }
                 break;
-              case 'LISTUSERONLINE' :// пришел результат поиска
+              case 'LISTUSERONLINE' :// пришел список пользователей онлайн
                 {
                     userOnlineArr = [];
                     for (let i = 0; i < jsonMessage.userList.length;i++)
@@ -252,11 +256,15 @@ function wsSendMessage(sender,host,value) {
 function wsSendMessageList(sender,host) {
     myWs.send(JSON.stringify({action: 'GETMESSAGELIST',sender:sender,host:host }));
 }
-function wsSendLogin(value) {
-    myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString()}));
+function wsSendLogin(value,password) {
+    myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString(), password:password.toString() ,}));
 }
-function wsSendRegistration(login) {
-    myWs.send(JSON.stringify({action: 'REGISTRATION', data: login.toString()}));
+function wsSendRegistration(login,name,surName,password) {
+    let passwordMD5 = MD5(password);
+    myWs.send(JSON.stringify({action: 'REGISTRATION', login: login.toString(), name: name.toString(),
+                                surName: surName.toString(), password: passwordMD5.toString()  } 
+                            )
+    );
 }
 function wsSendSearch(str) {
     myWs.send(JSON.stringify({action: 'SEARCH', data: str.toString()}));
@@ -308,7 +316,7 @@ setInterval(function () {
 },100);
 
 setInterval(function () {
-    if (myLogin!=null)
+    if (myLogin!=null && imInSystem==true)
     {
         wsSendPing(myLogin);
     }
@@ -416,5 +424,6 @@ function inSystemMessanger(login='')// вход в систему
     var divRegistration=document.getElementById('divRegistration');
     divRegistration.style.display = 'none';
     divImName.innerHTML = login;
+    imInSystem = true;
   
 }
