@@ -78,8 +78,8 @@ webServer.on('connection', (ws) => {
                     to(userId, JSON.stringify({ action: 'BEUSERNAME' }))
                 }
                 else {
-                    saveUserBd(jsonMessage.data);
-                    to(userId, JSON.stringify({ action: 'NEWUSEROK', data: jsonMessage.data }));
+                    saveUserBd(jsonMessage.login, jsonMessage.name,jsonMessage.surName,jsonMessage.password);
+                    to(userId, JSON.stringify({ action: 'NEWUSEROK', data: jsonMessage.login }));
                 }
             });
 
@@ -97,7 +97,7 @@ webServer.on('connection', (ws) => {
                     && userArr[numLength].raceMess==true)
                 {                                                  
                     to(numLength,JSON.stringify({action:'DOUBLELOGIN',data:null}));
-                    console.log('i='+i);
+                    console.log('i2='+i);
                     flagDoubleLogin = true;
                 }
             }
@@ -113,18 +113,29 @@ webServer.on('connection', (ws) => {
                             if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
                             {
                                 to(i,JSON.stringify({action:'NOLOGIN',data:null}));
-                                console.log('i='+i);
+                                console.log(res);
                             }
                         }
                     }
                     else
                     {
+                        
                         for (let i = 0; i < userArr.length;i++)
                         {
+                            
                             if (userArr[i] && userArr[i].login==jsonMessage.data && userArr[i].raceMess==true)
                             {
-                                to(i,JSON.stringify({action:'YESLOGIN',data:null}));
-                                console.log('i='+i);
+                                if (res.password==jsonMessage.password)
+                                {
+                                    to(i,JSON.stringify({action:'YESLOGIN',data:null}));
+                                    console.log('YESLOGIN');
+                                    console.log(res);
+                                    console.log(jsonMessage);
+                                }
+                                else
+                                {
+                                    to(i,JSON.stringify({action:'NOLOGIN',data:null}));
+                                }
                             }
                         }
                     }
@@ -377,14 +388,17 @@ setInterval(function () {
             userListOnline.push(pingArr[i].login);
         }
     }
-    console.log(userListOnline)
-    for (let i = 0; i < userArr.length;i++)
+    if (userListOnline.length>0)
     {
-        if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+        console.log(userListOnline)
+        for (let i = 0; i < userArr.length;i++)
         {
-            to(userArr[i].id, JSON.stringify({ action: 'LISTUSERONLINE', userList: userListOnline }));
-        }
+            if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
+            {
+                to(userArr[i].id, JSON.stringify({ action: 'LISTUSERONLINE', userList: userListOnline }));
+            }
                         
+        }
     }
 },500);
 function getCountMessage(loginArr)// получить список количества не прочитанных сообщений
@@ -474,10 +488,13 @@ function calcUserArr(str='') // функция расчитать список �
     });
    
 }
-function saveUserBd (login)// сохранить пользователя в бж
+function saveUserBd (login,name,surName,password)// сохранить пользователя в бж
 {
     var newUser = new usersDB({
         login: login,
+        name:name,
+        surName:surName,
+        password:password,
     });
     console.log('Is Document new?' + newUser.isNew+ newUser);
     newUser.save(function (err, doc) {
