@@ -1,17 +1,17 @@
 const myWs = new WebSocket('ws://localhost:9000');
-var userListName = [];// масси вимен пользователей
+var userListName = [];// масси вимен пользователей\
+var countListMes = [];
 var userOnlineArr = [];
 var numSelectHost = null;
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
  var labelReg=null;
  var labelIn=null;
 var myLogin = null;
-var imInSystem = false;
 window.onload = function () {
     labelReg=document.getElementById('labelRegP');
     labelIn=document.getElementById('labelInP');
     // отправлеям сообшение
-    updateChat('dct good',1);
+    //updateChat('dct good',1);
     var button = document.getElementById('button');
     button.onclick=function(){
         sendMessage(); 
@@ -38,22 +38,26 @@ window.onload = function () {
     var buttonReg = document.getElementById('submitReg');
     buttonReg.onclick = function () {
         var login = document.getElementById('loginReg').value;    
-        var name = document.getElementById('nameReg').value;
-        var surName = document.getElementById('surnameReg').value;
+        //var name = document.getElementById('nameReg').value;
+        //var surname = document.getElementById('surnameReg').value;
         var password = document.getElementById('passwordReg').value;
         var password2=document.getElementById('password2Reg').value;
         if  (login=='')
         {
             labelReg.innerHTML = "Введите логин";
         }
-        else  if  (name=='')
+        if  (login.length<3)
         {
-            labelReg.innerHTML = "Введите имя";
+            labelReg.innerHTML = "Логин: минимум 3 символа";
         }
-        else  if  (surname=='')
-        {
-            labelReg.innerHTML = "Введите Фамилию";
-        }
+        //else  if  (name=='')
+        //{
+        //    labelReg.innerHTML = "Введите имя";
+        //}
+        //else  if  (surname=='')
+        //{
+        //    labelReg.innerHTML = "Введите Фамилию";
+        //}
         else  if  (password=='')
         {
             labelReg.innerHTML = "Введите пароль";
@@ -65,8 +69,9 @@ window.onload = function () {
         } 
         else
         {
-            myLogin=login;
-            wsSendRegistration(login,name,surName,password); 
+            myLogin = login;
+            let passwordMD5 = MD5(password);
+            wsSendRegistration(login,passwordMD5); 
             //alert('регистрация');
         }
        // console.log(password);
@@ -75,7 +80,7 @@ window.onload = function () {
     var buttonLogin = document.getElementById('submit');
     buttonLogin.onclick = function () {
         myLogin=document.getElementById('login').value;
-        let password=document.getElementById('password').value;
+        password=document.getElementById('password').value;
        // inSystemMessanger(myLogin);
         let passwordMD5 = MD5(password);
         wsSendLogin(myLogin,passwordMD5);
@@ -109,7 +114,33 @@ window.onload = function () {
                     }
                     else
                     {
-                        updateCountMessage(jsonMessage.sender, 1);
+                     //   updateUserList(jsonMessage.loginArr);
+                        let flag = false;
+                        for (let i = 0; i < userListName.length;i++)
+                        {
+                            if (userListName[i]==jsonMessage.sender)
+                            {
+                                flag = true;
+                            }
+                        }
+                        if (flag==false)
+                        {
+                            addUser(jsonMessage.sender);
+                        }
+                        let index = -1;
+                        //console.log(countListMes);
+                        //alert(countListMes);
+                        for (let i = 0; i < countListMes.length;i++)
+                        {
+                            if (jsonMessage.sender==countListMes[i].login)
+                            {
+                                index = i;
+                                break;
+                            }
+                        }
+                         
+                        updateCountMessage(jsonMessage.sender,(index!=-1?countListMes[index].value+1 : 1));
+                        
                     }
                 }break;
             case 'USERS':// пришел список пользователей
@@ -130,7 +161,7 @@ window.onload = function () {
                    
                 }
                 break;
-             case 'YESLOGIN':// пришел список пользователей
+             case 'YESLOGIN':// вход в систему
                 {
                     
                 
@@ -159,7 +190,6 @@ window.onload = function () {
              case 'NEWUSEROK': // пользователь успешно зарегистрировался
                 {
                     //wsSendLogin(jsonMessage.login);
-                    myLogin = jsonMessage.data;
                     inSystemMessanger(jsonMessage.data);
                 }
                 break;
@@ -214,6 +244,19 @@ window.onload = function () {
 }
 function updateCountMessage(login,value)// функция обновления метки-счетчика не прочитанных сообщений
 {
+    let flag = false; 
+    for (let i = 0; i < countListMes.length;i++)
+    {
+        if (countListMes[i].login==login)
+        {
+            countListMes[i]={ login: login, value, value };
+            flag = true;
+        }
+    }
+    if (flag==false)
+    {
+        countListMes.push({ login: login, value, value });
+    }
     document.querySelectorAll('.divUser').forEach(function (elem) {
         let text = elem.firstChild.innerHTML;
         let textRes=text.replace(/<span(.*?)<\/span>/g, '');
@@ -257,17 +300,13 @@ function wsSendMessageList(sender,host) {
     myWs.send(JSON.stringify({action: 'GETMESSAGELIST',sender:sender,host:host }));
 }
 function wsSendLogin(value,password) {
-    myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString(), password:password.toString() ,}));
+    myWs.send(JSON.stringify({action: 'LOGIN', data: value.toString(),password:password.toString(),}));
 }
-function wsSendRegistration(login,name,surName,password) {
-    let passwordMD5 = MD5(password);
-    myWs.send(JSON.stringify({action: 'REGISTRATION', login: login.toString(), name: name.toString(),
-                                surName: surName.toString(), password: passwordMD5.toString()  } 
-                            )
-    );
+function wsSendRegistration(login,password) {
+    myWs.send(JSON.stringify({action: 'REGISTRATION', data: login.toString(), password:password.toString(),}));
 }
 function wsSendSearch(str) {
-    myWs.send(JSON.stringify({action: 'SEARCH', data: str.toString()}));
+    myWs.send(JSON.stringify({action: 'SEARCH', data: str.toString(), login:myLogin}));
 }
 // функция для отправки команды ping на сервер
 function wsSendPing(login) {
@@ -316,7 +355,7 @@ setInterval(function () {
 },100);
 
 setInterval(function () {
-    if (myLogin!=null && imInSystem==true)
+    if (myLogin!=null)
     {
         wsSendPing(myLogin);
     }
@@ -405,12 +444,14 @@ function sendMessage()// отправить сообшение
 {
     var textarea = document.getElementById('textarea');
      
-    var text = textarea.value; 
-    textarea.value= '';  
-    updateChat(text,1);      
-    wsSendText(text);
-    wsSendMessage(myLogin, selectHost, text);
-   
+    var text = textarea.value;
+    if (text.length>0 && checkSpaceOnly(text)==false)
+    {
+        textarea.value= '';  
+        updateChat(text,1);      
+        wsSendText(text);
+        wsSendMessage(myLogin, selectHost, text);
+    }
 
 }
 function inSystemMessanger(login='')// вход в систему
@@ -424,6 +465,14 @@ function inSystemMessanger(login='')// вход в систему
     var divRegistration=document.getElementById('divRegistration');
     divRegistration.style.display = 'none';
     divImName.innerHTML = login;
-    imInSystem = true;
   
+}
+function checkSpaceOnly(str)
+{
+    let  flag = false;
+    for (var i=0; i<str.length; i++)
+    {
+      if (str[i]!=' ') flag=true;
+    }
+    if (flag == true) return false; else return true;
 }
