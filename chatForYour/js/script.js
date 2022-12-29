@@ -1,4 +1,4 @@
-const myWs = new WebSocket('ws://localhost:9000');
+const myWs = new WebSocket('ws://localhost:9000');///*89.223.123.46*/
 var userListName = [];// масси вимен пользователей\
 var countListMes = [];
 var userOnlineArr = [];
@@ -6,12 +6,15 @@ var numSelectHost = null;
 var selectHost = ''; // выбранный пользователь для отпраавки сообшений
  var labelReg=null;
  var labelIn=null;
+var dataInLocal = null;
 var myLogin = null;
+var imInSystem = false;
 window.onload = function () {
     labelReg=document.getElementById('labelRegP');
     labelIn=document.getElementById('labelInP');
     // отправлеям сообшение
     //updateChat('dct good',1);
+
     var button = document.getElementById('button');
     button.onclick=function(){
         sendMessage(); 
@@ -82,12 +85,31 @@ window.onload = function () {
         myLogin=document.getElementById('login').value;
         password=document.getElementById('password').value;
        // inSystemMessanger(myLogin);
-        let passwordMD5 = MD5(password);
-        wsSendLogin(myLogin,passwordMD5);
+        if (myLogin=='')
+        {
+            labelIn.innerHTML = "Введите логин";
+        }
+        else if (password=='')
+        {
+            labelIn.innerHTML = "Введите пароль";
+        }
+        else
+        {
+            let passwordMD5 = MD5(password);
+            // кодирует в my%20name=John%20Smith
        
-
+            wsSendLogin(myLogin,passwordMD5);
+      
+            dataInLocal= JSON.stringify({"login": myLogin, "password": passwordMD5});
+         }
         
     }
+    // выход из системы
+    var buttonExit = document.getElementById('exitButton');
+    buttonExit.onclick = function () {
+        localStorage.removeItem('data');
+        location.reload(); 
+    };
     // поиск
     var buttonSearch = document.getElementById('buttonSearch');
     buttonSearch.onclick=function () {
@@ -99,6 +121,14 @@ window.onload = function () {
     // обработчик проинформирует в консоль когда соединение установится
     myWs.onopen = function () {
         console.log('подключился');
+        let dataIn = JSON.parse(localStorage.getItem('data'));
+        console.log(dataIn);
+        if (dataIn != null)
+        {
+            myLogin = dataIn.login;
+            wsSendLogin(dataIn.login,dataIn.password);
+            
+        }
     };
     // обработчик сообщений от сервера
     myWs.onmessage = function (message) {
@@ -166,6 +196,8 @@ window.onload = function () {
                     
                 
                     inSystemMessanger(myLogin);
+                    imInSystem = true;
+                    if (dataInLocal!=null)localStorage.setItem('data', dataInLocal);
                 }
                 break;
              case 'NOLOGIN':// нет такого логина 
@@ -204,13 +236,13 @@ window.onload = function () {
                             console.log(jsonMessage.messageArr[i].message);
                             console.log(jsonMessage.messageArr[i].loginSender);
                             var receive = jsonMessage.messageArr[i].loginSender == myLogin ? 1 : 0;
-                            if (jsonMessage.messageArr[i].status==1)
-                            {
-                                countStatusMes++;
-                            }
+                            //if (jsonMessage.messageArr[i].status==1)
+                            //{
+                            //    countStatusMes++;
+                            //}
                             updateChat(jsonMessage.messageArr[i].message, receive);
                         }
-                        updateCountMessage(selectHost, countStatusMes);// обновить счетчик-метку непрочитанных сообшений
+                        updateCountMessage(selectHost, 0);// обновить счетчик-метку непрочитанных сообшений
                         let messageBox = document.getElementById('message-box');    
                         let height =     document.getElementById("message-box").scrollHeight;
                         messageBox.scrollTo(0,height);
@@ -249,13 +281,13 @@ function updateCountMessage(login,value)// функция обновления �
     {
         if (countListMes[i].login==login)
         {
-            countListMes[i]={ login: login, value, value };
+            countListMes[i]={ login: login, value: value };
             flag = true;
         }
     }
     if (flag==false)
     {
-        countListMes.push({ login: login, value, value });
+        countListMes.push({ login: login, value: value });
     }
     document.querySelectorAll('.divUser').forEach(function (elem) {
         let text = elem.firstChild.innerHTML;
@@ -355,7 +387,7 @@ setInterval(function () {
 },100);
 
 setInterval(function () {
-    if (myLogin!=null)
+    if (imInSystem==true)
     {
         wsSendPing(myLogin);
     }
@@ -472,7 +504,7 @@ function checkSpaceOnly(str)
     let  flag = false;
     for (var i=0; i<str.length; i++)
     {
-      if (str[i]!=' ') flag=true;
+      if (str[i]!=' ' && str[i]!='\n') flag=true;
     }
     if (flag == true) return false; else return true;
 }
