@@ -90,17 +90,17 @@ webServer.on('connection', (ws) => {
             userArr[userArr.length - 1].raceMess = true;
             let login = userArr[userArr.length - 1].login;
             let flagDoubleLogin = false;
-            for (let i = 0; i < userArr.length-1;i++)
-            {
-                var numLength = userArr.length - 1;
-                if (userArr[numLength] && userArr[i] && userArr[i].login==userArr[numLength].login 
-                    && userArr[numLength].raceMess==true)
-                {                                                  
-                    to(numLength,JSON.stringify({action:'DOUBLELOGIN',data:null}));
-                    console.log('i='+i);
-                    flagDoubleLogin = true;
-                }
-            }
+            //for (let i = 0; i < userArr.length-1;i++)
+            //{
+            //    var numLength = userArr.length - 1;
+            //    if (userArr[numLength] && userArr[i] && userArr[i].login==userArr[numLength].login 
+            //        && userArr[numLength].raceMess==true)
+            //    {                                                  
+            //        to(numLength,JSON.stringify({action:'DOUBLELOGIN',data:null}));
+            //        console.log('i='+i);
+            //        flagDoubleLogin = true;
+            //    }
+            //}
             if (flagDoubleLogin==false)
             {
                 var queryBeLogin = usersDB.findOne().where({ login: jsonMessage.data });
@@ -303,13 +303,25 @@ webServer.on('connection', (ws) => {
                         console.log('status change');
                     });
                     // отправляем список сообшений
-                    to(numUserId, JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr,countMessage:countMessage }));
+                    for (let i = 0; i < userArr.length;i++)
+                    {
+                        if (userArr[i] && userArr[i].login==jsonMessage.sender && userArr[i].raceMess==true)
+                        {
+                            to(i, JSON.stringify({ action: 'MESSAGELIST', messageArr: doc.messageArr,countMessage:countMessage }));
+                        }
+                    }
            
                    
                 }
                 else
                 {
-                     to(numUserId,JSON.stringify({ action: 'MESSAGELIST', messageArr: null }))
+                    for (let i = 0; i < userArr.length;i++)
+                    {
+                        if (userArr[i] && userArr[i].login==jsonMessage.sender && userArr[i].raceMess==true)
+                        {
+                            to(i,JSON.stringify({ action: 'MESSAGELIST', messageArr: null }))
+                        }
+                    }
                 }
             });
         }
@@ -391,7 +403,7 @@ setInterval(function () {
             userListOnline.push(pingArr[i].login);
         }
     }
-    console.log(userListOnline)
+    console.log(userListOnline);
     for (let i = 0; i < userArr.length;i++)
     {
         if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
