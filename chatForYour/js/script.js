@@ -1,4 +1,4 @@
-const myWs = new WebSocket('ws://localhost:9000');///*89.223.123.46*/
+const myWs = new WebSocket('ws://89.223.123.46:9000');///*89.223.123.46*/
 var userListName = [];// масси вимен пользователей\
 var countListMes = [];
 var userOnlineArr = [];
@@ -9,7 +9,11 @@ var selectHost = ''; // выбранный пользователь для от�
 var dataInLocal = null;
 var myLogin = null;
 var imInSystem = false;
+var myAudio = new Audio();
 window.onload = function () {
+    myAudio = new Audio();
+    myAudio.src = 'sound.mp3';
+
     labelReg=document.getElementById('labelRegP');
     labelIn=document.getElementById('labelInP');
     // отправлеям сообшение
@@ -75,6 +79,7 @@ window.onload = function () {
             myLogin = login;
             let passwordMD5 = MD5(password);
             wsSendRegistration(login,passwordMD5); 
+            dataInLocal= JSON.stringify({login: myLogin, password: passwordMD5});
             //alert('регистрация');
         }
        // console.log(password);
@@ -100,7 +105,7 @@ window.onload = function () {
        
             wsSendLogin(myLogin,passwordMD5);
       
-            dataInLocal= JSON.stringify({"login": myLogin, "password": passwordMD5});
+            dataInLocal= JSON.stringify({login: myLogin, password: passwordMD5});
          }
         
     }
@@ -113,6 +118,7 @@ window.onload = function () {
     // поиск
     var buttonSearch = document.getElementById('buttonSearch');
     buttonSearch.onclick=function () {
+//        myAudio.play();
         var textSearch=document.getElementById('textAreaSearch').value;
       //wsSendSearch
         wsSendSearch(textSearch);
@@ -123,7 +129,7 @@ window.onload = function () {
         console.log('подключился');
         let dataIn = JSON.parse(localStorage.getItem('data'));
         console.log(dataIn);
-        if (dataIn != null)
+        if (dataIn !== null)
         {
             myLogin = dataIn.login;
             wsSendLogin(dataIn.login,dataIn.password);
@@ -138,6 +144,7 @@ window.onload = function () {
         {
             case 'TEXT': // пришло сообшение
                 {
+                    myAudio.play();
                     if (jsonMessage.sender==selectHost)
                     {
                         updateChat(jsonMessage.data, 0);
@@ -171,6 +178,7 @@ window.onload = function () {
                          
                         updateCountMessage(jsonMessage.sender,(index!=-1?countListMes[index].value+1 : 1));
                         
+                        
                     }
                 }break;
             case 'USERS':// пришел список пользователей
@@ -194,9 +202,9 @@ window.onload = function () {
              case 'YESLOGIN':// вход в систему
                 {
                     
-                
+                     
                     inSystemMessanger(myLogin);
-                    imInSystem = true;
+                    
                     if (dataInLocal!=null)localStorage.setItem('data', dataInLocal);
                 }
                 break;
@@ -223,6 +231,7 @@ window.onload = function () {
                 {
                     //wsSendLogin(jsonMessage.login);
                     inSystemMessanger(jsonMessage.data);
+                    if (dataInLocal!=null)localStorage.setItem('data', dataInLocal);
                 }
                 break;
              case 'MESSAGELIST': // пришел список сообшений
@@ -324,7 +333,7 @@ function wsSendEcho(value) {
 }
 function wsSendText(value) {
     myWs.send(JSON.stringify({action: 'TEXT', data: value.toString()}));
-}
+}//wsSendMessage('222','111',"privet");
 function wsSendMessage(sender,host,value) {
     myWs.send(JSON.stringify({action: 'MESSAGE',sender:sender,host:host ,data: value.toString()}));
 }
@@ -389,8 +398,25 @@ setInterval(function () {
 setInterval(function () {
     if (imInSystem==true)
     {
-        wsSendPing(myLogin);
+        wsSendPing(myLogin); 
+        if (localStorage.getItem('data')==null)
+        {
+    //        localStorage.removeItem('data');
+            location.reload();
+        }
     }
+    else
+    {
+        //if (localStorage.getItem('data')!=null)
+        //{
+        //  //  location.reload();
+        //    let login = JSON.parse(localStorage.getItem('data')).login;
+        //    console.log(login);
+        //    inSystemMessanger(login);
+
+        //}
+    }
+  
 },1000);
 
 function createElem(text,receive=0,className='')// создать елемент
@@ -473,16 +499,18 @@ function strip_tags(originalString)// функция удаления спец �
     return strippedString;
 }
 function sendMessage()// отправить сообшение
-{
-    var textarea = document.getElementById('textarea');
-     
-    var text = textarea.value;
-    if (text.length>0 && checkSpaceOnly(text)==false)
+{   if (selectHost!='')
     {
-        textarea.value= '';  
-        updateChat(text,1);      
-        wsSendText(text);
-        wsSendMessage(myLogin, selectHost, text);
+        var textarea = document.getElementById('textarea');
+     
+        var text = textarea.value;
+        if (text.length>0 && checkSpaceOnly(text)==false)
+        {
+            textarea.value= '';  
+            updateChat(text,1);      
+            wsSendText(text);
+            wsSendMessage(myLogin, selectHost, text);
+        }
     }
 
 }
@@ -497,6 +525,7 @@ function inSystemMessanger(login='')// вход в систему
     var divRegistration=document.getElementById('divRegistration');
     divRegistration.style.display = 'none';
     divImName.innerHTML = login;
+    imInSystem = true;
   
 }
 function checkSpaceOnly(str)
