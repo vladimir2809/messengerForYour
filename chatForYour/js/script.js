@@ -1,4 +1,4 @@
-const myWs = new WebSocket('ws://89.223.123.46:9000');///*89.223.123.46*/
+const myWs = new WebSocket('ws://194.26.138.125:9000');///*194.26.138.125*/
 var userListName = [];// масси вимен пользователей\
 var countListMes = [];
 var userOnlineArr = [];
@@ -129,7 +129,7 @@ window.onload = function () {
         console.log('подключился');
         let dataIn = JSON.parse(localStorage.getItem('data'));
         console.log(dataIn);
-        if (dataIn !== null)
+        if (dataIn !=null)
         {
             myLogin = dataIn.login;
             wsSendLogin(dataIn.login,dataIn.password);
@@ -273,8 +273,8 @@ window.onload = function () {
                     {
                         userOnlineArr.push(jsonMessage.userList[i]);
                     }
-                    console.log("USERS ONLINE");
-                    console.log(userOnlineArr);
+                    //console.log("USERS ONLINE");
+                    //console.log(userOnlineArr);
                 }
                 break;
             
