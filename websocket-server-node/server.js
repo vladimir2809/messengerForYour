@@ -9,6 +9,7 @@ var messagesDB = mongoose.model('messages',messagesSchema);
 //var messageSchema = require('./schemaForMessanger.js').messageSchema;
 //var messageDB = mongoose.model('Messanges',messageSchema);
 var countMes=0;
+var userId=0;
 var countUser=0;// счетчик пользователей
 const sockets = {};
 
@@ -52,9 +53,10 @@ mongoose.connection.on('open', function () {
 //соединение
 webServer.on('connection', (ws) => {
 
-    const userId = countUser;
+    userId = countUser;
     // регистрируем сокет и пользователя
     var   userOne=JSON.parse(JSON.stringify(user));;
+    
     userOne.id = userId;
     userOne.online = true;
     userArr.push(userOne);
@@ -146,7 +148,7 @@ webServer.on('connection', (ws) => {
             }
             
             // отрпавка списка пользователей и количества не прочитанных сообщений
-            getContacts(userArr[userArr.length - 1].login);// получить список контактов
+            if (userArr[userArr.length - 1]) getContacts(userArr[userArr.length - 1].login);// получить список контактов
             var interval = setInterval(function () {
                 if (contactFlag==true )// если список контактов получен
                 {
@@ -379,8 +381,8 @@ webServer.on('connection', (ws) => {
     ws.on('close', function incoming(message) {
         console.log('disconnect');
         console.log(message);
-        delete userArr[userId];
-        delete sockets[userId];
+        //delete userArr[userId];
+        //delete sockets[userId];
         //calcUserArr();
        // console.log(userArr);
     });
@@ -403,7 +405,7 @@ setInterval(function () {
             userListOnline.push(pingArr[i].login);
         }
     }
-    console.log(userListOnline);
+   // console.log(userListOnline);
     for (let i = 0; i < userArr.length;i++)
     {
         if (userArr[i] && userArr[i].id==i && userArr[i].raceMess==true)
@@ -426,7 +428,7 @@ function getCountMessage(loginArr)// получить список количе�
         console.log(mesArr);
         for (let k = 0; k < loginArr.length;k++)
         {
-            if (loginArr[k]!=userArr[userArr.length - 1].login)
+            if (userArr[userArr.length - 1] && loginArr[k]!=userArr[userArr.length - 1].login)
             {
                 count = 0;
                 for (let i = 0; i < mesArr.length;i++)
@@ -436,7 +438,7 @@ function getCountMessage(loginArr)// получить список количе�
                     
                         for (let j = 0; j < mesArr[i].messageArr.length;j++)
                         {
-                            if (/*loginArr[k]*/userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginHost)
+                            if (/*loginArr[k]*/userArr[userArr.length - 1] && userArr[userArr.length - 1].login==mesArr[i].messageArr[j].loginHost)
                             {
                    
                                 if (mesArr[i].messageArr[j].status == 1)
