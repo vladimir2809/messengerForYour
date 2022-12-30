@@ -336,7 +336,7 @@ webServer.on('connection', (ws) => {
                     // поиск совпадений
                     for (let i = 0; i < loginArr.arr.length;i++)
                     {
-                        if (loginArr.arr[i].indexOf(text) != -1)
+                        if (loginArr.arr[i].indexOf(text) != -1 && jsonMessage.login != loginArr.arr[i] )
                         {
                             resultArr.push(loginArr.arr[i]);
                         }
